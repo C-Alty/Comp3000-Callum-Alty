@@ -1,33 +1,26 @@
-import os
 import pandas as pd
-from pyais import decode
+import numpy as np
+import joblib
+from sklearn.ensemble import IsolationForest
 
-root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-raw_data_path = os.path.join('AIS_CAPTURE_raw_31012025.txt')
-cleaned_data_path = os.path.join(root_dir, 'ml_model', 'cleaned_ais_data.csv')
+file_path = "ml_model/cleaned_ais_data.csv"
+df = pd.read_csv(file_path)
 
-ais_data = []
-with open(raw_data_path, 'r') as file:
-    for line in file:
-        line = line.strip()
-        try:
-            decoded_msg = decode(line)
-            if hasattr(decoded_msg, 'lat') and hasattr(decoded_msg, 'lon'):
-                if decoded_msg.lat is not None and decoded_msg.lon is not None:
-                    ais_data.append({
-                        'mmsi': getattr(decoded_msg, 'mmsi', None),
-                        'lat': decoded_msg.lat,
-                        'lon': decoded_msg.lon,
-                        'speed': getattr(decoded_msg, 'speed', None),
-                        'course': getattr(decoded_msg, 'course', None),
-                        'timestamp': getattr(decoded_msg, 'timestamp', None)
-                    })
-        except Exception as e:
-            continue
+# drop rows with missing values
+df.dropna(subset=["mmsi", "lat", "lon", "speed", "course"], inplace=True)
 
-if ais_data:
-    df = pd.DataFrame(ais_data)
-    df.to_csv(cleaned_data_path, index=False)
-    print(f"cleaned AIS data saved to {cleaned_data_path}")
-else:
-    print("no AIS messages with lat/lon found.")  #debugging
+df["mmsi"] = df["mmsi"].astype(int) # checks for blanks
+df = df[df["mmsi"] != 0]
+df["speed_diff"] = df.groupby("mmsi")["speed"].diff().fillna(0)
+df["course_diff"] = df.groupby("mmsi")["course"].diff().fillna(0)
+features = ["speed", "speed_diff", "course_diff"]
+df_train = df[features]
+
+# train the Isolation Forest model
+model = IsolationForest(contamination=0.02, random_state=42)
+df["anomaly"] = model.fit_predict(df_train)
+
+joblib.dump(model, "ml_model/ais_anomaly_model.pkl")
+df.to_csv("ml_model/ais_anomaly_results.csv", index=False)
+
+print("results saved to 'ml_model/ais_anomaly_results.csv'.")
