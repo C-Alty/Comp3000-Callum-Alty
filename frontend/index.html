@@ -3,16 +3,26 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AIS Ship Tracker</title>
+  <title>AIS Anomaly Detector</title>
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 </head>
 <body>
-  <h1>AIS Ship Tracker</h1>
+  <h1>AIS Anomaly Detector</h1>
+
+  <!--search-->
+  <div id="search-container">
+    <input type="text" id="search-input" placeholder="Enter Ship ID...">
+    <button id="search-button">Search</button>
+  </div>
+
   <div id="map"></div>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="/socket.io/socket.io.js"></script>
   <script src="script.js"></script> 
+
+  <img id="boat" src="boat.png" alt="Boat">
+
 </body>
 </html>

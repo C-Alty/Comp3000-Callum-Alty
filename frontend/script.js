@@ -1,5 +1,5 @@
 document.addEventListener("DOMContentLoaded", () => {
-  console.log("🌍 Initializing Map...");
+  console.log("initializing map");
 
   try {
     window.map = L.map("map", {
@@ -37,61 +37,44 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 const markers = {};
-console.log("loaded");
-const socket = io("http://localhost:3000", {
-  transports: ["websocket", "polling"],
-  reconnectionAttempts: 5, 
-});
+const socket = io();
 
 socket.on("connect", () => {
   console.log("websocket connected");
 });
 
 socket.on("connect_error", (error) => {
-  console.error("webSocket connection error:", error);
+  console.error("websocket connection error:", error);
 });
 
 socket.on("disconnect", () => {
-  console.warn("webSocket disconnected");
-});
-
-const normalIcon = L.icon({
-  iconUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png",
-  shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-  popupAnchor: [1, -34],
-});
-
-const anomalyIcon = L.icon({
-  iconUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-red.png", // red
-  shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-  popupAnchor: [1, -34],
+  console.warn("websocket disconnected");
 });
 
 socket.on("ais-data", (data) => {
+  console.log("received AIS data:", data);
+
   if (!data || !data.shipId || typeof data.latitude !== "number" || typeof data.longitude !== "number") {
     console.warn("invalid data received:", data);
     return;
   }
 
   const { shipId, latitude, longitude } = data;
+  const tooltipContent = `🚢 Ship ID: ${shipId} <br> 📍 Lat: ${latitude.toFixed(5)}, Lon: ${longitude.toFixed(5)}`; //shown on the map
 
   if (!window.map || typeof window.map.addLayer !== "function") {
-    console.error("leaflet map not initialized");
+    console.error("leaflet map not initialized correctly");
     return;
   }
 
   if (markers[shipId]) {
     markers[shipId].setLatLng([latitude, longitude]);
-    console.log(`updated ship ${shipId} to [${latitude}, ${longitude}]`);
+    markers[shipId].bindTooltip(tooltipContent).openTooltip();
+    console.log(`updated Ship ${shipId} to [${latitude}, ${longitude}]`);
   } else {
-    // blue
-    const marker = L.marker([latitude, longitude], { icon: normalIcon })
+    const marker = L.marker([latitude, longitude])
       .addTo(window.map)
-      .bindPopup(`Ship ID: ${shipId}`);
+      .bindTooltip(tooltipContent, { permanent: false, direction: "top" });
 
     markers[shipId] = marker;
     console.log(`new ship ${shipId} at [${latitude}, ${longitude}]`);
@@ -99,10 +82,35 @@ socket.on("ais-data", (data) => {
 });
 
 socket.on("anomaly-alert", (data) => {
-  console.warn(`Anomaly detected for Ship ${data.shipId}`);
+  console.warn(`anomaly detected for ship ${data.shipId}`);
 
   if (markers[data.shipId]) {
-    markers[data.shipId].setIcon(anomalyIcon);
+    markers[data.shipId].setIcon(
+      L.divIcon({
+        className: "anomaly-marker",
+        html: "🚨",
+        iconSize: [25, 25],
+      })
+    );
+
     markers[data.shipId].bindPopup(`anomalous ship ID: ${data.shipId}`).openPopup();
+  }
+});
+
+// search
+document.getElementById("search-button").addEventListener("click", () => {
+  const searchInput = document.getElementById("search-input").value.trim();
+
+  if (!searchInput) {
+    alert("Please enter a Ship ID.");
+    return;
+  }
+
+  if (markers[searchInput]) {
+    const shipMarker = markers[searchInput];
+    window.map.setView(shipMarker.getLatLng(), 10);
+    shipMarker.openPopup();
+  } else {
+    alert("Ship ID not found on the map.");
   }
 });

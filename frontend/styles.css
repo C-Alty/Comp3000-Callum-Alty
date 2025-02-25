@@ -1,13 +1,90 @@
 body {
   text-align: center;
-  font-family: Arial, sans-serif;
+  font-family: 'Poppins', Arial, sans-serif;
+  background: linear-gradient(to bottom, #0a1931, #185adb); 
+  color: #ffffff;
+  margin: 0;
+  padding: 0;
+  overflow: hidden; 
+}
+
+.leaflet-container {
+  background: #ADD3DF !important; 
 }
 
 #map {
-  height: 90vh;  
-  width: 100%;
-  border: 2px solid black;
+  height: 85vh;
+  width: 95%;
+  border: 3px solid #1e3a8a;
+  border-radius: 10px;
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.3);
+  margin: 20px auto;
+  position: relative;
+  z-index: 10; 
 }
 
+#boat {
+  position: absolute;
+  bottom: -20px; 
+  left: -200px; 
+  width: 85px; 
+  z-index: 5; 
+  
+  animation: boatMove 50s linear infinite, boatRock 4s ease-in-out infinite;
+}
 
-/* needs styling */
+@keyframes boatMove {
+  0% { left: -200px; }
+  100% { left: 100vw; }
+}
+
+@keyframes boatRock {
+  0%, 100% { transform: rotate(-3deg); }
+  50% { transform: rotate(3deg); }
+}
+
+#search-container {
+  position: absolute;
+  top: 15px;
+  left: 15px;
+  z-index: 1000;
+  background: rgba(0, 45, 140, 0.9);
+  padding: 10px 15px;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+#search-input {
+  padding: 8px;
+  border: none;
+  border-radius: 5px;
+  outline: none;
+  font-size: 14px;
+  width: 140px;
+  background: #e0e7ff;
+  color: #0a1931;
+}
+
+#search-button {
+  padding: 8px 12px;
+  border: none;
+  border-radius: 5px;
+  background: #1e3a8a;
+  color: white;
+  font-size: 14px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+#search-button:hover {
+  background: #185adb;
+}
+
+.leaflet-popup-content {
+  font-size: 14px;
+  font-weight: bold;
+  color: #0a1931;
+}
