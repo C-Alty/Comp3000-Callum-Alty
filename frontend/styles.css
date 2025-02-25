@@ -1,13 +1,13 @@
 body {
-    text-align: center;
-    font-family: Arial, sans-serif;
-  }
-  
-  #map {
-    height: 90vh;  
-    width: 100%;
-    border: 2px solid black;
-  }
-  
+  text-align: center;
+  font-family: Arial, sans-serif;
+}
 
-  /* needs styling */
+#map {
+  height: 90vh;  
+  width: 100%;
+  border: 2px solid black;
+}
+
+
+/* needs styling */

@@ -1,9 +1,9 @@
 require("dotenv").config();
 const WebSocket = require("ws");
+const { spawn } = require("child_process");
 
 module.exports = function aisHandler(io) {
   const API_KEY = process.env.AISSTREAM_API_KEY;
-
   if (!API_KEY) {
     console.error("error: Missing AISSTREAM_API_KEY in .env");
     return;
@@ -11,15 +11,15 @@ module.exports = function aisHandler(io) {
 
   const socket = new WebSocket("wss://stream.aisstream.io/v0/stream");
 
-  socket.addEventListener("open", (_) => {
-    console.log("connected to AIS Stream");
+  socket.addEventListener("open", () => {
+    console.log("connected to AIS stream");
 
     const subscriptionMessage = {
       APIkey: API_KEY,
       BoundingBoxes: [
         [
-          [-180, -90],  // currently set to entire world
-          [180, 90],    
+          [-180, -90], // cfurrently set to entire world
+          [180, 90],
         ],
       ],
     };
@@ -28,16 +28,14 @@ module.exports = function aisHandler(io) {
   });
 
   socket.addEventListener("error", (event) => {
-    console.error("WebSocket Error:", event);
+    console.error("websocket error:", event);
   });
 
   socket.addEventListener("close", () => {
-    console.warn("WebSocket Connection Closed");
+    console.warn("websocket connection closed");
   });
 
   socket.addEventListener("message", (event) => {
-    //console.log("AIS Data Received:", event.data); // raw ais data for debugging
-
     try {
       let aisMessage = JSON.parse(event.data);
 
@@ -49,7 +47,16 @@ module.exports = function aisHandler(io) {
           longitude: positionReport["Longitude"],
         };
 
-        //console.log(`ShipId: ${shipData.shipId} Lat: ${shipData.latitude} Lon: ${shipData.longitude}`); // log output for debugging
+        //console.log(`ship ${shipData.shipId} at [${shipData.latitude}, ${shipData.longitude}]`);  //(debugging)
+
+        // detection model
+        detectAnomaly(shipData, (isAnomaly) => {
+          if (isAnomaly) {
+            console.warn(`anomaly detected for ship ${shipData.shipId}`);
+            io.emit("anomaly-alert", shipData);
+          }
+        });
+
         io.emit("ais-data", shipData);
       }
     } catch (error) {
@@ -57,3 +64,25 @@ module.exports = function aisHandler(io) {
     }
   });
 };
+
+function detectAnomaly(shipData, callback) {
+  const pythonProcess = spawn("python", ["ml_model/detect_anomaly.py"], {
+    stdio: ["pipe", "pipe", "ignore"],
+  });
+
+  pythonProcess.stdin.write(JSON.stringify(shipData) + "\n");
+  pythonProcess.stdin.end();
+
+  pythonProcess.stdout.on("data", (data) => {
+    try {
+      const result = JSON.parse(data.toString());
+      callback(result.isAnomaly);
+    } catch (error) {
+      console.error("error parsing anomaly detection result:", error);
+    }
+  });
+
+  pythonProcess.on("error", (error) => {
+    console.error("error running Python script:", error);
+  });
+}

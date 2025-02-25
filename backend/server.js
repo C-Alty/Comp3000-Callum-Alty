@@ -1,10 +1,4 @@
 require("dotenv").config({ path: __dirname + "/.env" });
-console.log("API Key Loaded:", process.env.AISSTREAM_API_KEY ? "Yes" : "No");
-
-if (!process.env.AISSTREAM_API_KEY) {
-  console.error("Missing AISSTREAM_API_KEY in .env");
-  process.exit(1);
-}
 
 const express = require("express");
 const http = require("http");
@@ -15,28 +9,45 @@ const aisHandler = require("./ais_handler");
 
 const app = express();
 const server = http.createServer(app);
-const io = new Server(server);
+const io = new Server(server, {
+  cors: {
+    origin: "*",
+    methods: ["GET", "POST"]
+  }
+});
 
 const PORT = process.env.PORT || 3000;
 
 app.use(express.static(path.join(__dirname, "../frontend")));
-aisHandler(io); 
-console.log("AIS Handler Initialized.");
+console.log("static files loaded");
+
+aisHandler(io);
+console.log("AIS handler initialized.");
 
 app.get("/", (req, res) => {
-  console.log("Request received for /");
   res.sendFile(path.join(__dirname, "../frontend/index.html"));
 });
 
 server.listen(PORT, () => {
-  console.log(`Server running at http://localhost:${PORT}`);
+  console.log(`server running at http://localhost:${PORT}`);
 });
 
-// hidden crashes
+io.on("connection", (socket) => {
+  console.log("websocket connected");
+
+  socket.on("disconnect", () => {
+    console.warn("websocket disconnected");
+  });
+
+  socket.on("error", (error) => {
+    console.error("websocket error:", error);
+  });
+});
+
 process.on("uncaughtException", (err) => {
-  console.error("Uncaught Exception:", err);
+  console.error("uncaught exception:", err);
 });
 
 process.on("unhandledRejection", (reason, promise) => {
-  console.error("Unhandled Rejection:", reason);
+  console.error("unhandled rejection:", reason);
 });
