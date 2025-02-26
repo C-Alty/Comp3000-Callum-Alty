@@ -30,7 +30,7 @@ document.addEventListener("DOMContentLoaded", () => {
       );
     });
 
-    console.log("map initialized!");
+    console.log("map i!");
   } catch (error) {
     console.error("failed to initialize map:", error);
   }
@@ -52,15 +52,12 @@ socket.on("disconnect", () => {
 });
 
 socket.on("ais-data", (data) => {
-  console.log("received AIS data:", data);
-
   if (!data || !data.shipId || typeof data.latitude !== "number" || typeof data.longitude !== "number") {
     console.warn("invalid data received:", data);
     return;
   }
 
   const { shipId, latitude, longitude } = data;
-  const tooltipContent = `🚢 Ship ID: ${shipId} <br> 📍 Lat: ${latitude.toFixed(5)}, Lon: ${longitude.toFixed(5)}`; //shown on the map
 
   if (!window.map || typeof window.map.addLayer !== "function") {
     console.error("leaflet map not initialized correctly");
@@ -69,48 +66,17 @@ socket.on("ais-data", (data) => {
 
   if (markers[shipId]) {
     markers[shipId].setLatLng([latitude, longitude]);
-    markers[shipId].bindTooltip(tooltipContent).openTooltip();
-    console.log(`updated Ship ${shipId} to [${latitude}, ${longitude}]`);
   } else {
     const marker = L.marker([latitude, longitude])
       .addTo(window.map)
-      .bindTooltip(tooltipContent, { permanent: false, direction: "top" });
+      .bindTooltip(`Ship ID: ${shipId}`, { permanent: false, direction: "top" });
+
+    marker.on("click", () => {
+      document.getElementById("vessel-id").textContent = `Ship ID: ${shipId}`;
+      document.getElementById("vessel-lat").textContent = `Latitude: ${latitude.toFixed(5)}`;
+      document.getElementById("vessel-lon").textContent = `Longitude: ${longitude.toFixed(5)}`;
+    });
 
     markers[shipId] = marker;
-    console.log(`new ship ${shipId} at [${latitude}, ${longitude}]`);
-  }
-});
-
-socket.on("anomaly-alert", (data) => {
-  console.warn(`anomaly detected for ship ${data.shipId}`);
-
-  if (markers[data.shipId]) {
-    markers[data.shipId].setIcon(
-      L.divIcon({
-        className: "anomaly-marker",
-        html: "🚨",
-        iconSize: [25, 25],
-      })
-    );
-
-    markers[data.shipId].bindPopup(`anomalous ship ID: ${data.shipId}`).openPopup();
-  }
-});
-
-// search
-document.getElementById("search-button").addEventListener("click", () => {
-  const searchInput = document.getElementById("search-input").value.trim();
-
-  if (!searchInput) {
-    alert("Please enter a Ship ID.");
-    return;
-  }
-
-  if (markers[searchInput]) {
-    const shipMarker = markers[searchInput];
-    window.map.setView(shipMarker.getLatLng(), 10);
-    shipMarker.openPopup();
-  } else {
-    alert("Ship ID not found on the map.");
   }
 });

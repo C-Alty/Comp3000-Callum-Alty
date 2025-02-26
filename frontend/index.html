@@ -10,10 +10,18 @@
 <body>
   <h1>AIS Anomaly Detector</h1>
 
-  <!--search-->
+  <!-- search -->
   <div id="search-container">
     <input type="text" id="search-input" placeholder="Enter Ship ID...">
     <button id="search-button">Search</button>
+  </div>
+
+  <!-- vessel info -->
+  <div id="vessel-info">
+    <h3>Vessel Information</h3>
+    <p id="vessel-id">Ship ID: -</p>
+    <p id="vessel-lat">Latitude: -</p>
+    <p id="vessel-lon">Longitude: -</p>
   </div>
 
   <div id="map"></div>
@@ -23,6 +31,5 @@
   <script src="script.js"></script> 
 
   <img id="boat" src="boat.png" alt="Boat">
-
 </body>
 </html>
