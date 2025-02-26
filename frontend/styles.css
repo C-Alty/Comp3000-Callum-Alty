@@ -5,31 +5,49 @@ body {
   color: #ffffff;
   margin: 0;
   padding: 0;
-  overflow: hidden; 
+  overflow: hidden;
 }
 
 .leaflet-container {
   background: #ADD3DF !important; 
+  position: relative;
+}
+
+.leaflet-container::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: linear-gradient(white 1px, transparent 1px),
+                    linear-gradient(90deg, white 1px, transparent 1px);
+  background-size: 10% 10%;
+  z-index: 2;
+  pointer-events: none;
 }
 
 #map {
   height: 85vh;
-  width: 95%;
+  width: 85vh;
+  max-width: 95%;
   border: 3px solid #1e3a8a;
   border-radius: 10px;
   box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.3);
   margin: 20px auto;
   position: relative;
   z-index: 10; 
+  overflow: hidden; 
 }
 
 #boat {
   position: absolute;
-  bottom: -15px; 
+  bottom: -20px; 
   left: -200px; 
   width: 85px; 
   z-index: 5; 
-  animation: boatMove 80s linear infinite, boatRock 5s ease-in-out infinite;
+  
+  animation: boatMove 50s linear infinite, boatRock 4s ease-in-out infinite;
 }
 
 @keyframes boatMove {
@@ -38,14 +56,14 @@ body {
 }
 
 @keyframes boatRock {
-  0%, 100% { transform: rotate(-2deg); }
-  50% { transform: rotate(2deg); }
+  0%, 100% { transform: rotate(-3deg); }
+  50% { transform: rotate(3deg); }
 }
 
 #search-container {
   position: absolute;
   top: 15px;
-  left: 2.5%;
+  left: 15px;
   z-index: 1000;
   background: rgba(0, 45, 140, 0.9);
   padding: 10px 15px;
