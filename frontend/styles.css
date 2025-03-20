@@ -1,6 +1,7 @@
+
 body {
   text-align: center;
-  font-family: 'Poppins', Arial, sans-serif;
+  font-family: 'Montserrat', Arial, sans-serif;
   background: linear-gradient(to bottom, #0a1931, #185adb); 
   color: #ffffff;
   margin: 0;
@@ -42,25 +43,23 @@ body {
 
 #vessel-info {
   position: absolute;
-  top: 80px;
+  top: 100px;
   left: 20px;
-  width: 200px;
   background: white;
-  color: #0a1931;
+  color: black;
   padding: 10px;
-  border-radius: 8px;
+  border-radius: 5px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
-  font-size: 14px;
   z-index: 1000;
-  text-align: left;
+  width: 200px;
 }
-
 #boat {
   position: absolute;
   bottom: -20px; 
   left: -200px; 
   width: 85px; 
   z-index: 5; 
+  cursor: pointer;
   animation: boatMove 50s linear infinite, boatRock 4s ease-in-out infinite;
 }
 
@@ -72,6 +71,21 @@ body {
 @keyframes boatRock {
   0%, 100% { transform: rotate(-3deg); }
   50% { transform: rotate(3deg); }
+}
+
+/* Smoke Effect */
+.smoke {
+  position: absolute;
+  width: 30px;
+  height: 30px;
+  background: url('smoke.png') no-repeat center/contain;
+  opacity: 1;
+  animation: smokeRise 2s ease-out forwards;
+}
+
+@keyframes smokeRise {
+  0% { transform: translateY(0) scale(1); opacity: 1; }
+  100% { transform: translateY(-50px) scale(1.5); opacity: 0; }
 }
 
 #search-container {
