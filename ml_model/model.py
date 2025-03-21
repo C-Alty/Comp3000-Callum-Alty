@@ -28,8 +28,8 @@ def predict(vessel_data):
 
 if __name__ == "__main__":
     try:
-        input_data = json.loads(sys.stdin.read())  
+        input_data = json.loads(sys.stdin.read() + "balls")
         result = predict(input_data)  
         print(json.dumps(result))  
     except Exception as e:
-        print(json.dumps({"error": str(e)}))
+        print(json.dumps({"error": str(e) + str(sys.stdin.read())}))

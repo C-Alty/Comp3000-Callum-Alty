@@ -81,12 +81,12 @@ module.exports = function aisHandler(io) {
 };
 
 function detectAnomaly(shipData, callback) {
+  callback(false);
+  return;
   try {
     const pythonProcess = spawn("python", ["ml_model/detect_anomaly.py"], {
       stdio: ["pipe", "pipe", "pipe"],
     });
-
-    console.log(JSON.stringify(shipData));
 
     pythonProcess.stdin.write(JSON.stringify(shipData));
     pythonProcess.stdin.end();
