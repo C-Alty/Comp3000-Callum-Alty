@@ -51,7 +51,7 @@ module.exports = function aisHandler(io) {
         };
 
         shipQueue.push(shipData);
-        if (shipQueue.length > 100) shipQueue.shift(); // Prevent memory overload
+        if (shipQueue.length > 100) shipQueue.shift(); // prevent memory overload
       }
     } catch (error) {
       console.error("error parsing AIS data:", error);
@@ -64,7 +64,7 @@ module.exports = function aisHandler(io) {
       let shipData = shipQueue.shift();
 
       detectAnomaly(shipData, (isAnomaly) => {
-        shipData.isAnomaly = isAnomaly;  // Add anomaly status
+        shipData.isAnomaly = isAnomaly;  // add anomaly status
 
         if (isAnomaly) {
           console.warn(`anomaly detected for ship ${shipData.shipId}`);
