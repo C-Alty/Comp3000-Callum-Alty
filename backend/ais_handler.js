@@ -100,6 +100,7 @@ function detectAnomaly(shipData, callback) {
     pythonProcess.stdout.on("end", () => {
       try {
         let cleanedResult = result.trim().split("\n").pop();
+        console.log(cleanedResult);
         const parsedResult = JSON.parse(cleanedResult);
         callback(parsedResult.isAnomaly);
       } catch (error) {
