@@ -59,7 +59,6 @@ module.exports = function aisHandler(io) {
   });
 
   setInterval(() => {
-    console.log("ship queue length:", shipQueue.length);
     if (!isProcessing && shipQueue.length > 0) {
       isProcessing = true;
       let shipData = shipQueue.shift();
@@ -87,6 +86,8 @@ function detectAnomaly(shipData, callback) {
       stdio: ["pipe", "pipe", "pipe"],
     });
 
+    console.log(JSON.stringify(shipData));
+
     pythonProcess.stdin.write(JSON.stringify(shipData) + "\n");
     pythonProcess.stdin.end();
 
@@ -103,7 +104,6 @@ function detectAnomaly(shipData, callback) {
     pythonProcess.stdout.on("end", () => {
       try {
         let cleanedResult = result.trim().split("\n").pop();
-        console.log(cleanedResult);
         const parsedResult = JSON.parse(cleanedResult);
         callback(parsedResult.isAnomaly);
       } catch (error) {
