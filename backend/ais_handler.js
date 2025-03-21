@@ -63,19 +63,22 @@ module.exports = function aisHandler(io) {
       isProcessing = true;
       let shipData = shipQueue.shift();
 
+      io.emit("ais-data", shipData);
+        isProcessing = false;
+
       
 
-      detectAnomaly(shipData, (isAnomaly) => {
-        shipData.isAnomaly = isAnomaly;  // add anomaly status
+      // detectAnomaly(shipData, (isAnomaly) => {
+      //   shipData.isAnomaly = isAnomaly;  // add anomaly status
 
-        if (isAnomaly) {
-          console.warn(`anomaly detected for ship ${shipData.shipId}`);
-          io.emit("anomaly-alert", shipData);
-        }
+      //   if (isAnomaly) {
+      //     console.warn(`anomaly detected for ship ${shipData.shipId}`);
+      //     io.emit("anomaly-alert", shipData);
+      //   }
 
-        io.emit("ais-data", shipData);
-        isProcessing = false;
-      });
+      //   io.emit("ais-data", shipData);
+      //   isProcessing = false;
+      // });
     }
   }, 500);
 };
