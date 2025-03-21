@@ -88,7 +88,7 @@ function detectAnomaly(shipData, callback) {
 
     console.log(JSON.stringify(shipData));
 
-    pythonProcess.stdin.write(JSON.stringify(shipData) + "\n");
+    pythonProcess.stdin.write(JSON.stringify(shipData));
     pythonProcess.stdin.end();
 
     let result = "";
