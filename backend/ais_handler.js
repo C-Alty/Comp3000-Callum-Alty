@@ -59,9 +59,12 @@ module.exports = function aisHandler(io) {
   });
 
   setInterval(() => {
+    console.log("ship queue length:", shipQueue.length);
     if (!isProcessing && shipQueue.length > 0) {
       isProcessing = true;
       let shipData = shipQueue.shift();
+
+      
 
       detectAnomaly(shipData, (isAnomaly) => {
         shipData.isAnomaly = isAnomaly;  // add anomaly status

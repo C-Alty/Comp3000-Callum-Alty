@@ -70,6 +70,7 @@ socket.on("disconnect", () => {
 
 // Handle AIS Data
 socket.on("ais-data", (data) => {
+  console.log("frontend recieved ais data");
   if (!data || !data.shipId || typeof data.latitude !== "number" || typeof data.longitude !== "number") {
     console.warn("⚠️ Invalid data received:", data);
     return;
