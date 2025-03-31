@@ -30,12 +30,11 @@ document.addEventListener("DOMContentLoaded", () => {
       );
     });
 
-    console.log("✅ Map Initialized!");
+    console.log("map initialized!");
   } catch (error) {
-    console.error("❌ Failed to initialize map:", error);
+    console.error("failed to initialize map:", error);
   }
 
-  // Add the "Simulate Anomaly" button
   const button = document.createElement("button");
   button.id = "simulate-anomaly-button";
   button.textContent = "Simulate Anomaly";
@@ -43,7 +42,7 @@ document.addEventListener("DOMContentLoaded", () => {
   button.style.top = "10px";
   button.style.right = "10px";
   button.style.padding = "10px";
-  button.style.backgroundColor = "#ff0000";
+  button.style.backgroundColor = "#D27936";
   button.style.color = "white";
   button.style.border = "none";
   button.style.cursor = "pointer";
@@ -52,39 +51,39 @@ document.addEventListener("DOMContentLoaded", () => {
   button.addEventListener("click", simulateAnomaly);
 });
 
-// Store markers by ship ID
+// store markers by ship ID
 const markers = {};
 const socket = io();
 
 socket.on("connect", () => {
-  console.log("🔗 WebSocket Connected");
+  console.log("websocket connected");
 });
 
 socket.on("connect_error", (error) => {
-  console.error("❌ WebSocket Connection Error:", error);
+  console.error("websocket connection error:", error);
 });
 
 socket.on("disconnect", () => {
-  console.warn("⚠️ WebSocket Disconnected");
+  console.warn("websocket disconnected");
 });
 
 // Handle AIS Data
 socket.on("ais-data", (data) => {
   if (!data || !data.shipId || typeof data.latitude !== "number" || typeof data.longitude !== "number") {
-    console.warn("⚠️ Invalid data received:", data);
+    console.warn("invalid data received:", data);
     return;
   }
 
   const { shipId, latitude, longitude, isAnomaly, reason, ...restData } = data;
 
   if (!window.map || typeof window.map.addLayer !== "function") {
-    console.error("❌ Leaflet map not initialized correctly");
+    console.error("leaflet map not initialized correctly");
     return;
   }
 
-  // Set marker color based on anomaly status
+  // set marker color based on anomaly status
   const markerIcon = L.icon({
-    iconUrl: isAnomaly ? "red-marker.png" : "blue-marker.png", // Ensure these images exist!
+    iconUrl: isAnomaly ? "red-marker.png" : "blue-marker.png", 
     iconSize: [25, 41],
     iconAnchor: [12, 41],
     popupAnchor: [1, -34]
@@ -105,7 +104,7 @@ socket.on("ais-data", (data) => {
   }
 });
 
-// Update vessel details panel
+// update vessel details panel
 function updateVesselInfo(shipId, latitude, longitude, data) {
   const vesselDetails = document.getElementById("vessel-details");
 
@@ -116,7 +115,7 @@ function updateVesselInfo(shipId, latitude, longitude, data) {
   `;
 
   if (data.isAnomaly) {
-    vesselDetails.innerHTML += `<p><strong>⚠️ Anomaly Detected:</strong> ${data.reason || "Unknown reason"}</p>`;
+    vesselDetails.innerHTML += `<p><strong>anomaly detected:</strong> ${data.reason || "Unknown reason"}</p>`;
   }
 
   Object.keys(data).forEach((key) => {
@@ -129,7 +128,6 @@ function updateVesselInfo(shipId, latitude, longitude, data) {
   });
 }
 
-// Search Functionality (Fixed)
 document.getElementById("search-button").addEventListener("click", () => {
   const searchInput = document.getElementById("search-input").value.trim();
 
@@ -150,25 +148,24 @@ document.getElementById("search-button").addEventListener("click", () => {
   }
 });
 
-// 🚨 Simulate Anomaly Button Function
+// simulate anomaly button function
 function simulateAnomaly() {
   const fakeShip = {
     shipId: "999999",
-    latitude: 36,  // Corrected to be inside the map bounds
-    longitude: -5, // Near Strait of Gibraltar
-    speed: 200,    // Abnormally high speed
-    course: 0,     // Edge case course
+    latitude: 36,  
+    longitude: -5, 
+    speed: 200,    
+    course: 0,     
     speed_diff: 50, 
     course_diff: 90,
     isAnomaly: true,
-    reason: "⚠️ Unusual high speed & abnormal location"
+    reason: "unusual high speed & abnormal location"
   };
 
-  console.log("🚨 Simulated Anomaly:", fakeShip);
+  console.log("simulated anomaly:", fakeShip);
 
-  // Create red marker for anomaly
   const markerIcon = L.icon({
-    iconUrl: "red-marker.png", // Ensure this image exists!
+    iconUrl: "red-marker.png", 
     iconSize: [25, 41],
     iconAnchor: [12, 41],
     popupAnchor: [1, -34]
@@ -190,7 +187,7 @@ function simulateAnomaly() {
   });
 }
 
-// 🚢 Handle boat click for honk & smoke
+// handle boat click for honk & smoke
 document.addEventListener("DOMContentLoaded", () => {
   const boat = document.getElementById("boat");
 

@@ -24,6 +24,7 @@ def decode_ais(file_path):
 #for running directly
 if __name__ == "__main__":
     if len(sys.argv) != 2:
+        print("Usage: python decode_ais.py <ais_data_file>")
     else:
         decoded_ais = decode_ais(sys.argv[1])
         for msg in decoded_ais:
