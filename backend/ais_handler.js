@@ -1,6 +1,9 @@
 require("dotenv").config();
 const WebSocket = require("ws");
 const { spawn } = require("child_process");
+const fs = require("fs");
+const path = require("path");
+const csvParser = require("csv-parser");
 
 module.exports = function aisHandler(io) {
   const API_KEY = process.env.AISSTREAM_API_KEY;
@@ -12,7 +15,9 @@ module.exports = function aisHandler(io) {
   const socket = new WebSocket("wss://stream.aisstream.io/v0/stream");
 
   let shipQueue = [];
-  let isProcessing = false;
+  let csvHeaderWritten = false;
+
+  const livePath = path.join(__dirname, "../live_ais_data.csv");
 
   socket.addEventListener("open", () => {
     console.log("connected to AIS stream");
@@ -20,7 +25,7 @@ module.exports = function aisHandler(io) {
     const subscriptionMessage = {
       APIKey: API_KEY,
       BoundingBoxes: [[[-180, -90], [180, 90]]],
-      Filters: { MessageTypes: [1, 2, 3, 5] }
+      Filters: { MessageTypes: [1, 2, 3, 5] },
     };
 
     socket.send(JSON.stringify(subscriptionMessage));
@@ -36,94 +41,139 @@ module.exports = function aisHandler(io) {
 
   socket.addEventListener("message", (event) => {
     try {
-      let aisMessage = JSON.parse(event.data);
+      const aisMessage = JSON.parse(event.data);
 
       if (aisMessage["MessageType"] === "PositionReport") {
-        let positionReport = aisMessage["Message"]["PositionReport"];
-        let shipData = {
+        const positionReport = aisMessage["Message"]["PositionReport"];
+        const shipData = {
           shipId: positionReport["UserID"],
           latitude: positionReport["Latitude"],
           longitude: positionReport["Longitude"],
           speed: positionReport["SOG"] || 0,
           course: positionReport["COG"] || 0,
-          speed_diff: 0,
-          course_diff: 0
+          timestamp: new Date().toISOString(),
+          isAnomaly: false,
         };
 
         shipQueue.push(shipData);
-        if (shipQueue.length > 100) shipQueue.shift(); // prevent memory overload
+        if (shipQueue.length > 100) shipQueue.shift();
       }
     } catch (error) {
       console.error("error parsing AIS data:", error);
     }
   });
 
-  setInterval(() => {
-    if (!isProcessing && shipQueue.length > 0) {
-      isProcessing = true;
-      let shipData = shipQueue.shift();
+  // handle simulated ships sent from frontend
+  io.on("connection", (socket) => {
+    socket.on("simulate-ship", (shipData) => {
+      console.log("received simulated ship from frontend:", shipData);
 
-      io.emit("ais-data", shipData);
-        isProcessing = false;
+      const formatted = `${shipData.shipId},${shipData.latitude},${shipData.longitude},${shipData.speed},${shipData.course},${new Date().toISOString()}\n`;
 
-      
+      if (!fs.existsSync(livePath)) {
+        fs.writeFileSync(livePath, "mmsi,lat,lon,speed,course,timestamp\n");
+        csvHeaderWritten = true;
+      }
 
-      // detectAnomaly(shipData, (isAnomaly) => {
-      //   shipData.isAnomaly = isAnomaly;  // add anomaly status
+      fs.appendFileSync(livePath, formatted);
+      console.log("simulated ship appended to live_ais_data.csv");
 
-      //   if (isAnomaly) {
-      //     console.warn(`anomaly detected for ship ${shipData.shipId}`);
-      //     io.emit("anomaly-alert", shipData);
-      //   }
+      const emittedShip = {
+        shipId: shipData.shipId,
+        latitude: shipData.latitude,
+        longitude: shipData.longitude,
+        speed: shipData.speed,
+        course: shipData.course,
+        timestamp: new Date().toISOString(),
+        isAnomaly: false,
+      };
 
-      //   io.emit("ais-data", shipData);
-      //   isProcessing = false;
-      // });
-    }
-  }, 500);
-};
-
-function detectAnomaly(shipData, callback) {
-  callback(false);
-  return;
-  try {
-    const pythonProcess = spawn("python", ["ml_model/detect_anomaly.py"], {
-      stdio: ["pipe", "pipe", "pipe"],
+      io.emit("ais-data", emittedShip);
+      console.log("📡 Emitted simulated ship to map:", emittedShip);
     });
+  });
 
-    pythonProcess.stdin.write(JSON.stringify(shipData));
-    pythonProcess.stdin.end();
+  // Append live AIS data to CSV every 2 seconds
+  setInterval(() => {
+    if (shipQueue.length > 0) {
+      if (!csvHeaderWritten && !fs.existsSync(livePath)) {
+        fs.writeFileSync(livePath, "mmsi,lat,lon,speed,course,timestamp\n");
+        csvHeaderWritten = true;
+      }
 
-    let result = "";
+      const rows = shipQueue.map((ship) => {
+        return `${ship.shipId},${ship.latitude},${ship.longitude},${ship.speed},${ship.course},${ship.timestamp}`;
+      });
+
+      fs.appendFileSync(livePath, rows.join("\n") + "\n");
+      console.log(`appended ${shipQueue.length} ships to live_ais_data.csv`);
+    }
+  }, 2000);
+
+  // emit live ship data to frontend every 2 seconds
+  setInterval(() => {
+    shipQueue.forEach((ship) => {
+      io.emit("ais-data", ship);
+    });
+  }, 2000);
+
+  // run ML model every 2 minutes
+  setInterval(() => {
+    console.log("running check_live_data.py...");
+
+    const pythonProcess = spawn("python", ["ml_model/check_live_data.py"]);
 
     pythonProcess.stdout.on("data", (data) => {
-      result += data.toString();
+      console.log("ML Output:", data.toString());
     });
 
     pythonProcess.stderr.on("data", (data) => {
       console.error("python error:", data.toString());
     });
 
-    pythonProcess.stdout.on("end", () => {
-      try {
-        let cleanedResult = result.trim().split("\n").pop();
-        const parsedResult = JSON.parse(cleanedResult);
-        callback(parsedResult.isAnomaly);
-      } catch (error) {
-        console.error("error parsing anomaly detection result:", error);
-      }
-    });
-
-    pythonProcess.on("error", (error) => {
-      console.error("error running Python script:", error);
-    });
-
-    pythonProcess.on("exit", (code) => {
+    pythonProcess.on("close", (code) => {
       if (code !== 0) {
         console.error(`python process exited with code ${code}`);
+        return;
       }
+
+      const checkedPath = path.join(__dirname, "../checked_live_ais_data.csv");
+      const anomalies = [];
+
+      fs.createReadStream(checkedPath)
+        .pipe(csvParser())
+        .on("data", (row) => {
+          const isAnomaly = row.anomaly && row.anomaly === "-1";
+
+          const shipData = {
+            shipId: row.mmsi,
+            latitude: parseFloat(row.lat),
+            longitude: parseFloat(row.lon),
+            speed: parseFloat(row.speed),
+            course: parseFloat(row.course),
+            timestamp: row.timestamp,
+            isAnomaly: isAnomaly,
+            reason: isAnomaly ? "aomalous behaviour detected by Isolation Forest" : undefined,
+          };
+
+          if (isAnomaly) {
+            console.warn(`anomaly detected for vessel ${shipData.shipId}`);
+          }
+
+          io.emit("ais-data", shipData);
+          console.log("emitting AIS data to frontend:", shipData);
+
+          if (isAnomaly) anomalies.push(shipData);
+        })
+        .on("end", () => {
+          if (anomalies.length === 0) {
+            console.log("no anomalies found in this cycle.");
+          }
+
+          fs.writeFileSync(livePath, "mmsi,lat,lon,speed,course,timestamp\n");
+          console.log("live_ais_data.csv cleared for next cycle");
+          csvHeaderWritten = false;
+        });
     });
-  } catch (err) {
-    console.error("error starting Python process:", err);
-  }
-}
+  }, 2 * 60 * 1000); // every 2 minutes
+};

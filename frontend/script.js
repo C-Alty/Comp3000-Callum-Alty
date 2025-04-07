@@ -67,8 +67,8 @@ socket.on("disconnect", () => {
   console.warn("websocket disconnected");
 });
 
-// Handle AIS Data
 socket.on("ais-data", (data) => {
+  console.log("📡 Received AIS data:", data); 
   if (!data || !data.shipId || typeof data.latitude !== "number" || typeof data.longitude !== "number") {
     console.warn("invalid data received:", data);
     return;
@@ -81,16 +81,18 @@ socket.on("ais-data", (data) => {
     return;
   }
 
-  // set marker color based on anomaly status
+  // set marker icon based on anomaly status
   const markerIcon = L.icon({
-    iconUrl: isAnomaly ? "red-marker.png" : "blue-marker.png", 
+    iconUrl: isAnomaly ? "red-marker.png" : "blue-marker.png",
     iconSize: [25, 41],
     iconAnchor: [12, 41],
-    popupAnchor: [1, -34]
+    popupAnchor: [1, -34],
   });
 
+  // Create or update marker
   if (markers[shipId]) {
     markers[shipId].setLatLng([latitude, longitude]);
+    markers[shipId].setIcon(markerIcon);
   } else {
     const marker = L.marker([latitude, longitude], { icon: markerIcon })
       .addTo(window.map)
@@ -101,6 +103,12 @@ socket.on("ais-data", (data) => {
     });
 
     markers[shipId] = marker;
+  }
+
+  // Alert and log if anomaly
+  if (isAnomaly) {
+    console.warn(`🚨 Anomaly detected for vessel ${shipId}: ${reason || "Unknown reason"}`);
+    alert(`🚨 Anomaly detected for vessel ${shipId}!`);
   }
 });
 
@@ -148,45 +156,21 @@ document.getElementById("search-button").addEventListener("click", () => {
   }
 });
 
-// simulate anomaly button function
 function simulateAnomaly() {
   const fakeShip = {
-    shipId: "999999",
-    latitude: 36,  
-    longitude: -5, 
-    speed: 200,    
-    course: 0,     
-    speed_diff: 50, 
-    course_diff: 90,
-    isAnomaly: true,
-    reason: "unusual high speed & abnormal location"
+    shipId: "999999999",
+    latitude: 84.5,           
+    longitude: 10.0,        
+    speed: 500,              
+    course: 45,              
+    speed_diff: 200,          
+    course_diff: 170          
   };
 
-  console.log("simulated anomaly:", fakeShip);
+  console.log("sending simulated ship to backend:", fakeShip);
 
-  const markerIcon = L.icon({
-    iconUrl: "red-marker.png", 
-    iconSize: [25, 41],
-    iconAnchor: [12, 41],
-    popupAnchor: [1, -34]
-  });
-
-  const marker = L.marker([fakeShip.latitude, fakeShip.longitude], { icon: markerIcon })
-    .addTo(window.map)
-    .bindTooltip(`Fake Ship ${fakeShip.shipId}`, { permanent: false, direction: "top" });
-
-  markers[fakeShip.shipId] = marker;
-
-  marker.on("click", () => {
-    updateVesselInfo(
-      fakeShip.shipId,
-      fakeShip.latitude,
-      fakeShip.longitude,
-      { reason: fakeShip.reason, speed: fakeShip.speed, course: fakeShip.course }
-    );
-  });
+  socket.emit("simulate-ship", fakeShip);
 }
-
 // handle boat click for honk & smoke
 document.addEventListener("DOMContentLoaded", () => {
   const boat = document.getElementById("boat");
