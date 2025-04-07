@@ -84,7 +84,7 @@ socket.on("ais-data", (data) => {
   // set marker icon based on anomaly status
   const markerIcon = L.icon({
     iconUrl: isAnomaly ? "red-marker.png" : "blue-marker.png",
-    iconSize: [25, 41],
+    iconSize: [10, 10],
     iconAnchor: [12, 41],
     popupAnchor: [1, -34],
   });
