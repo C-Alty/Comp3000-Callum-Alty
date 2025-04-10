@@ -7,13 +7,15 @@
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
+<script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
 </head>
 <body>
   <h1>AIS Anomaly Detector</h1>
 
   <!-- search -->
   <div id="search-container">
-    <input type="text" id="search-input" placeholder="Enter Ship ID...">
+    <input type="text" id="search-input" placeholder="Ship Name or ID">
     <button id="search-button">Search</button>
   </div>
 
@@ -21,9 +23,12 @@
     <div id="vessel-info">
       <h3>Vessel Information</h3>
       <div id="vessel-details">
+        <p><strong>Ship Name:</strong> -</p>
         <p><strong>Ship ID:</strong> -</p>
         <p><strong>Latitude:</strong> -</p>
         <p><strong>Longitude:</strong> -</p>
+        <p><strong>Speed:</strong> -</p>
+        <p><strong>Course:</strong> -</p>
         <hr>
       </div>
     </div>

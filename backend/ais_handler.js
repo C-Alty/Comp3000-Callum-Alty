@@ -43,12 +43,12 @@ module.exports = function aisHandler(io) {
     try {
       const aisMessage = JSON.parse(event.data);
 
-      // 🔍 Inspect full message
-      console.log("🛰️ Raw AIS Message:", JSON.stringify(aisMessage, null, 2));
+      console.log("raw AIS message:", JSON.stringify(aisMessage, null, 2));
 
       if (aisMessage["MessageType"] === "PositionReport") {
         const positionReport = aisMessage["Message"]["PositionReport"];
         const shipData = {
+          shipName: aisMessage?.MetaData?.ShipName || "Unknown",
           shipId: positionReport["UserID"],
           latitude: positionReport["Latitude"],
           longitude: positionReport["Longitude"],
@@ -92,7 +92,7 @@ module.exports = function aisHandler(io) {
       };
 
       io.emit("ais-data", emittedShip);
-      console.log("📡 Emitted simulated ship to map:", emittedShip);
+      console.log("emitted simulated ship to map:", emittedShip);
     });
   });
 
