@@ -96,7 +96,7 @@ socket.on("ais-data", (data) => {
   } else {
     const marker = L.marker([latitude, longitude], { icon: markerIcon })
       .addTo(window.map)
-      .bindTooltip(`Ship ID: ${shipId}`, { permanent: false, direction: "top" });
+      .bindTooltip(`Ship ID: ${shipId}`, { permanent: false, direction: "top", offset: [-6, -37] });
 
     marker.on("click", () => {
       updateVesselInfo(shipId, latitude, longitude, { isAnomaly, reason, ...restData });
@@ -159,7 +159,7 @@ document.getElementById("search-button").addEventListener("click", () => {
 function simulateAnomaly() {
   const fakeShip = {
     shipId: "999999999",
-    latitude: 84.5,           
+    latitude: 64.5,           
     longitude: 10.0,        
     speed: 500,              
     course: 45,              

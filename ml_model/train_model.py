@@ -25,7 +25,7 @@ features = ["lat", "lon", "speed", "course", "speed_diff", "course_diff"]
 df_train = df[features]
 
 # Train the Isolation Forest model
-model = IsolationForest(n_estimators=200, contamination=0.01, random_state=42)
+model = IsolationForest(n_estimators=500, contamination=0.05, random_state=42)
 df["anomaly"] = model.fit_predict(df_train)
 
 # Save model
