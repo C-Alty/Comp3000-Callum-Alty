@@ -25,7 +25,7 @@ module.exports = function aisHandler(io) {
     const subscriptionMessage = {
       APIKey: API_KEY,
       BoundingBoxes: [[[-180, -90], [180, 90]]],
-      Filters: { MessageTypes: [1, 2, 3, 5] },
+      Filters: { MessageTypes: [1, 2, 3] },
     };
 
     socket.send(JSON.stringify(subscriptionMessage));
@@ -43,14 +43,17 @@ module.exports = function aisHandler(io) {
     try {
       const aisMessage = JSON.parse(event.data);
 
+      // 🔍 Inspect full message
+      console.log("🛰️ Raw AIS Message:", JSON.stringify(aisMessage, null, 2));
+
       if (aisMessage["MessageType"] === "PositionReport") {
         const positionReport = aisMessage["Message"]["PositionReport"];
         const shipData = {
           shipId: positionReport["UserID"],
           latitude: positionReport["Latitude"],
           longitude: positionReport["Longitude"],
-          speed: positionReport["SOG"] || 0,
-          course: positionReport["COG"] || 0,
+          speed: positionReport["Sog"] || 0,
+          course: positionReport["Cog"] || 0,
           timestamp: new Date().toISOString(),
           isAnomaly: false,
         };
