@@ -143,8 +143,10 @@ function updateVesselInfo(shipId, latitude, longitude, data) {
 document.getElementById("search-button").addEventListener("click", () => {
   const searchInput = document.getElementById("search-input").value.trim().toLowerCase();
 
-  if (!searchInput) {
-    alert("Please enter a Ship Name or Ship ID.");
+  // 🚫 Block meaningless input
+  const bannedTerms = ["", "unknown", "null", "undefined", "none", "???"];
+  if (bannedTerms.includes(searchInput)) {
+    alert("Please enter a valid Ship Name or Ship ID.");
     return;
   }
 
