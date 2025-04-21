@@ -26,37 +26,33 @@ document.addEventListener("DOMContentLoaded", () => {
       });
     });
 
+    // Cluster group
+    window.clusterGroup = L.markerClusterGroup();
+    window.map.addLayer(window.clusterGroup);
+
+    // Anomaly toggle
     window.anomalousOnlyToggle = L.control({ position: "topright" });
-
-window.anomalousOnlyToggle.onAdd = function () {
-  const container = L.DomUtil.create("div", "leaflet-control leaflet-bar anomaly-toggle-container");
-
-  // Prevent clicks from propagating to the map
-  L.DomEvent.disableClickPropagation(container);
-
-  container.innerHTML = `
-    <div class="anomaly-toggle-content">
-      <label class="switch">
-        <input type="checkbox" id="anomaly-toggle">
-        <span class="slider round"></span>
-      </label>
-      <span class="anomaly-toggle-label">Show only anomalies</span>
-    </div>
-  `;
-
-  return container;
-};
-
-window.anomalousOnlyToggle.addTo(window.map);
-
-    
+    window.anomalousOnlyToggle.onAdd = function () {
+      const container = L.DomUtil.create("div", "leaflet-control leaflet-bar anomaly-toggle-container");
+      L.DomEvent.disableClickPropagation(container);
+      container.innerHTML = `
+        <div class="anomaly-toggle-content">
+          <label class="switch">
+            <input type="checkbox" id="anomaly-toggle">
+            <span class="slider round"></span>
+          </label>
+          <span class="anomaly-toggle-label">Show only anomalies</span>
+        </div>
+      `;
+      return container;
+    };
+    window.anomalousOnlyToggle.addTo(window.map);
 
     console.log("map initialized!");
   } catch (error) {
     console.error("failed to initialize map:", error);
   }
 
-  // Simulate Anomaly Button
   const button = document.createElement("button");
   button.id = "simulate-anomaly-button";
   button.textContent = "Simulate Anomaly";
@@ -130,12 +126,12 @@ socket.on("ais-data", (data) => {
   const onlyAnomalies = document.getElementById("anomaly-toggle")?.checked;
 
   if (!onlyAnomalies || isAnomaly) {
-    if (!window.map.hasLayer(marker)) {
-      marker.addTo(window.map);
+    if (!window.clusterGroup.hasLayer(marker)) {
+      window.clusterGroup.addLayer(marker);
     }
   } else {
-    if (window.map.hasLayer(marker)) {
-      window.map.removeLayer(marker);
+    if (window.clusterGroup.hasLayer(marker)) {
+      window.clusterGroup.removeLayer(marker);
     }
   }
 
@@ -145,17 +141,15 @@ socket.on("ais-data", (data) => {
   }
 });
 
-// Handle checkbox toggle
+// Handle anomaly toggle
 document.addEventListener("change", (e) => {
   if (e.target && e.target.id === "anomaly-toggle") {
     const showOnlyAnomalies = e.target.checked;
+    window.clusterGroup.clearLayers();
     Object.values(markers).forEach((marker) => {
       const isAnomaly = marker.options.isAnomaly;
-      const shouldShow = !showOnlyAnomalies || isAnomaly;
-      if (shouldShow && !window.map.hasLayer(marker)) {
-        marker.addTo(window.map);
-      } else if (!shouldShow && window.map.hasLayer(marker)) {
-        window.map.removeLayer(marker);
+      if (!showOnlyAnomalies || isAnomaly) {
+        window.clusterGroup.addLayer(marker);
       }
     });
   }
@@ -186,7 +180,7 @@ function performSearch() {
 
   for (const shipId in markers) {
     const marker = markers[shipId];
-    if (!window.map.hasLayer(marker)) continue;
+    if (!window.clusterGroup.hasLayer(marker)) continue;
 
     const data = marker.options.shipData || {};
     const matchId = String(shipId).toLowerCase() === input;
@@ -211,8 +205,6 @@ document.getElementById("search-input").addEventListener("keypress", (e) => {
     performSearch();
   }
 });
-
-
 
 function simulateAnomaly() {
   const fakeShip = {
@@ -261,16 +253,13 @@ socket.on("model-status", (status) => {
   if (status.running) {
     loadingContainer.style.display = "block";
     loadingText.style.display = "block";
-   // loadingBar.style.transition = "width 5s linear";
     loadingBar.style.width = "0%";
 
     setTimeout(() => {
       loadingBar.style.width = "60%";
     }, 100);
   } else {
-    //loadingBar.style.transition = "width 6s ease-out";
     loadingBar.style.width = "100%";
-
     setTimeout(() => {
       loadingContainer.style.display = "none";
       loadingText.style.display = "none";
@@ -278,6 +267,3 @@ socket.on("model-status", (status) => {
     }, 800);
   }
 });
-
-
-
