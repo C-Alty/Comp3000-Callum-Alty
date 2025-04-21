@@ -43,8 +43,6 @@ module.exports = function aisHandler(io) {
     try {
       const aisMessage = JSON.parse(event.data);
 
-      // console.log("raw AIS message:", JSON.stringify(aisMessage, null, 2));
-
       if (aisMessage["MessageType"] === "PositionReport") {
         const positionReport = aisMessage["Message"]["PositionReport"];
         const shipData = {
@@ -109,20 +107,22 @@ module.exports = function aisHandler(io) {
       });
 
       fs.appendFileSync(livePath, rows.join("\n") + "\n");
-      // console.log(`appended ${shipQueue.length} ships to live_ais_data.csv`);
     }
   }, 2000);
 
-  // emit live ship data to frontend every 2 seconds
+  // Emit live ship data to frontend every 2 seconds
   setInterval(() => {
     shipQueue.forEach((ship) => {
       io.emit("ais-data", ship);
     });
   }, 2000);
 
-  // run ML model every 2 minutes
+  // Run ML model every 2 minutes
   setInterval(() => {
     console.log("running check_live_data.py...");
+
+    // Notify frontend that model is running
+    io.emit("model-status", { running: true });
 
     const pythonProcess = spawn("python", ["ml_model/check_live_data.py"]);
 
@@ -135,6 +135,9 @@ module.exports = function aisHandler(io) {
     });
 
     pythonProcess.on("close", (code) => {
+      // Notify frontend model is finished
+      io.emit("model-status", { running: false });
+
       if (code !== 0) {
         console.error(`python process exited with code ${code}`);
         return;
@@ -178,5 +181,5 @@ module.exports = function aisHandler(io) {
           csvHeaderWritten = false;
         });
     });
-  }, 2 * 60 * 1000 / 8); // every 2 minutes
+  }, 2 * 60 * 1000 / 8); // every 15 seconds (1/8 of 2 minutes)
 };

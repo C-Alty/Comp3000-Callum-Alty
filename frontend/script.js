@@ -252,3 +252,32 @@ document.addEventListener("DOMContentLoaded", () => {
     setTimeout(() => smoke.remove(), 2000);
   }
 });
+
+socket.on("model-status", (status) => {
+  const loadingContainer = document.getElementById("loading-container");
+  const loadingBar = document.getElementById("loading-bar");
+  const loadingText = document.getElementById("loading-text");
+
+  if (status.running) {
+    loadingContainer.style.display = "block";
+    loadingText.style.display = "block";
+   // loadingBar.style.transition = "width 5s linear";
+    loadingBar.style.width = "0%";
+
+    setTimeout(() => {
+      loadingBar.style.width = "60%";
+    }, 100);
+  } else {
+    //loadingBar.style.transition = "width 6s ease-out";
+    loadingBar.style.width = "100%";
+
+    setTimeout(() => {
+      loadingContainer.style.display = "none";
+      loadingText.style.display = "none";
+      loadingBar.style.width = "0%";
+    }, 800);
+  }
+});
+
+
+
