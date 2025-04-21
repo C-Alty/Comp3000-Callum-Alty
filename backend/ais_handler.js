@@ -43,7 +43,7 @@ module.exports = function aisHandler(io) {
     try {
       const aisMessage = JSON.parse(event.data);
 
-      console.log("raw AIS message:", JSON.stringify(aisMessage, null, 2));
+      // console.log("raw AIS message:", JSON.stringify(aisMessage, null, 2));
 
       if (aisMessage["MessageType"] === "PositionReport") {
         const positionReport = aisMessage["Message"]["PositionReport"];
@@ -109,7 +109,7 @@ module.exports = function aisHandler(io) {
       });
 
       fs.appendFileSync(livePath, rows.join("\n") + "\n");
-      console.log(`appended ${shipQueue.length} ships to live_ais_data.csv`);
+      // console.log(`appended ${shipQueue.length} ships to live_ais_data.csv`);
     }
   }, 2000);
 
@@ -178,5 +178,5 @@ module.exports = function aisHandler(io) {
           csvHeaderWritten = false;
         });
     });
-  }, 2 * 60 * 1000); // every 2 minutes
+  }, 2 * 60 * 1000 / 8); // every 2 minutes
 };
