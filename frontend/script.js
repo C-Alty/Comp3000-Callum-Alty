@@ -20,25 +20,43 @@ document.addEventListener("DOMContentLoaded", () => {
       [90, 180],
     ]);
 
-    window.map.on("drag", function () {
-      window.map.panInsideBounds(
-        [
-          [-90, -180],
-          [90, 180],
-        ],
-        { animate: false }
-      );
+    window.map.on("drag", () => {
+      window.map.panInsideBounds([[-90, -180], [90, 180]], {
+        animate: false,
+      });
     });
 
-    window.markerClusterGroup = L.markerClusterGroup();
-window.map.addLayer(window.markerClusterGroup);
+    window.anomalousOnlyToggle = L.control({ position: "topright" });
 
+window.anomalousOnlyToggle.onAdd = function () {
+  const container = L.DomUtil.create("div", "leaflet-control leaflet-bar anomaly-toggle-container");
+
+  // Prevent clicks from propagating to the map
+  L.DomEvent.disableClickPropagation(container);
+
+  container.innerHTML = `
+    <div class="anomaly-toggle-content">
+      <label class="switch">
+        <input type="checkbox" id="anomaly-toggle">
+        <span class="slider round"></span>
+      </label>
+      <span class="anomaly-toggle-label">Show only anomalies</span>
+    </div>
+  `;
+
+  return container;
+};
+
+window.anomalousOnlyToggle.addTo(window.map);
+
+    
 
     console.log("map initialized!");
   } catch (error) {
     console.error("failed to initialize map:", error);
   }
 
+  // Simulate Anomaly Button
   const button = document.createElement("button");
   button.id = "simulate-anomaly-button";
   button.textContent = "Simulate Anomaly";
@@ -55,35 +73,20 @@ window.map.addLayer(window.markerClusterGroup);
   button.addEventListener("click", simulateAnomaly);
 });
 
-// store markers by ship ID
 const markers = {};
 const socket = io();
 
-socket.on("connect", () => {
-  console.log("websocket connected");
-});
-
-socket.on("connect_error", (error) => {
-  console.error("websocket connection error:", error);
-});
-
-socket.on("disconnect", () => {
-  console.warn("websocket disconnected");
-});
+socket.on("connect", () => console.log("websocket connected"));
+socket.on("disconnect", () => console.warn("websocket disconnected"));
+socket.on("connect_error", (err) => console.error("websocket error:", err));
 
 socket.on("ais-data", (data) => {
-  console.log("received AIS data:", data); 
   if (!data || !data.shipId || typeof data.latitude !== "number" || typeof data.longitude !== "number") {
-    console.warn("invalid data received:", data);
+    console.warn("invalid AIS data:", data);
     return;
   }
 
   const { shipId, latitude, longitude, isAnomaly, reason, ...restData } = data;
-
-  if (!window.map || typeof window.map.addLayer !== "function") {
-    console.error("leaflet map not initialized correctly");
-    return;
-  }
 
   const markerIcon = L.icon({
     iconUrl: isAnomaly ? "red-marker.png" : "blue-marker.png",
@@ -92,28 +95,48 @@ socket.on("ais-data", (data) => {
     popupAnchor: [1, -34],
   });
 
-  if (markers[shipId]) {
-    markers[shipId].setLatLng([latitude, longitude]);
-    markers[shipId].setIcon(markerIcon);
-    markers[shipId].options.shipData = data; 
+  let marker = markers[shipId];
+
+  if (marker) {
+    marker.setLatLng([latitude, longitude]);
+    marker.setIcon(markerIcon);
+    marker.options.shipData = data;
+    marker.options.isAnomaly = isAnomaly;
   } else {
-    const marker = L.marker([latitude, longitude], {
+    marker = L.marker([latitude, longitude], {
       icon: markerIcon,
       shipData: data,
-    })
-      .addTo(window.map)
-      .bindTooltip(`<strong>${data.shipName || "Unknown"}</strong><br>${shipId}`, {
+      isAnomaly: isAnomaly,
+    }).bindTooltip(
+      `<strong>${data.shipName || "Unknown"}</strong><br>${shipId}`,
+      {
         permanent: false,
         direction: "top",
         offset: [-6, -37],
-      });
-      
+      }
+    );
 
     marker.on("click", () => {
-      updateVesselInfo(shipId, latitude, longitude, { isAnomaly, reason, ...restData });
+      updateVesselInfo(shipId, latitude, longitude, {
+        isAnomaly,
+        reason,
+        ...restData,
+      });
     });
 
     markers[shipId] = marker;
+  }
+
+  const onlyAnomalies = document.getElementById("anomaly-toggle")?.checked;
+
+  if (!onlyAnomalies || isAnomaly) {
+    if (!window.map.hasLayer(marker)) {
+      marker.addTo(window.map);
+    }
+  } else {
+    if (window.map.hasLayer(marker)) {
+      window.map.removeLayer(marker);
+    }
   }
 
   if (isAnomaly) {
@@ -122,31 +145,40 @@ socket.on("ais-data", (data) => {
   }
 });
 
-function updateVesselInfo(shipId, latitude, longitude, data) {
-  const vesselDetails = document.getElementById("vessel-details");
+// Handle checkbox toggle
+document.addEventListener("change", (e) => {
+  if (e.target && e.target.id === "anomaly-toggle") {
+    const showOnlyAnomalies = e.target.checked;
+    Object.values(markers).forEach((marker) => {
+      const isAnomaly = marker.options.isAnomaly;
+      const shouldShow = !showOnlyAnomalies || isAnomaly;
+      if (shouldShow && !window.map.hasLayer(marker)) {
+        marker.addTo(window.map);
+      } else if (!shouldShow && window.map.hasLayer(marker)) {
+        window.map.removeLayer(marker);
+      }
+    });
+  }
+});
 
+function updateVesselInfo(shipId, lat, lon, data) {
+  const vesselDetails = document.getElementById("vessel-details");
   vesselDetails.innerHTML = `
     <p><strong>Ship Name:</strong> ${data.shipName || "Unknown"}</p>
     <p><strong>Ship ID/MMSI:</strong> ${shipId}</p>
-    <p><strong>Latitude:</strong> ${latitude.toFixed(5)}</p>
-    <p><strong>Longitude:</strong> ${longitude.toFixed(5)}</p>
+    <p><strong>Latitude:</strong> ${lat.toFixed(5)}</p>
+    <p><strong>Longitude:</strong> ${lon.toFixed(5)}</p>
     <p><strong>Speed:</strong> ${data.speed ?? "Unknown"}</p>
     <p><strong>Course:</strong> ${data.course ?? "Unknown"}</p>
+    ${data.isAnomaly ? `<p><strong>Anomaly detected:</strong> ${data.reason || "Unknown reason"}</p>` : ""}
   `;
-  
-
-  if (data.isAnomaly) {
-    vesselDetails.innerHTML += `<p><strong>Anomaly detected:</strong> ${data.reason || "Unknown reason"}</p>`;
-  }
 }
 
-document.getElementById("search-button").addEventListener("click", () => {
-  const searchInput = document.getElementById("search-input").value.trim().toLowerCase();
-
-  // 🚫 Block meaningless input
-  const bannedTerms = ["", "unknown", "null", "undefined", "none", "???"];
-  if (bannedTerms.includes(searchInput)) {
-    alert("Please enter a valid Ship Name or Ship ID.");
+function performSearch() {
+  const input = document.getElementById("search-input").value.trim().toLowerCase();
+  const banned = ["", "unknown", "null", "undefined", "none", "???"];
+  if (banned.includes(input)) {
+    alert("Please enter a valid Ship Name or ID.");
     return;
   }
 
@@ -154,32 +186,33 @@ document.getElementById("search-button").addEventListener("click", () => {
 
   for (const shipId in markers) {
     const marker = markers[shipId];
-    const shipData = marker.options.shipData || {};
+    if (!window.map.hasLayer(marker)) continue;
 
-    const matchesById = shipId.toLowerCase() === searchInput;
-    const matchesByName = shipData.shipName && shipData.shipName.toLowerCase().includes(searchInput);
+    const data = marker.options.shipData || {};
+    const matchId = String(shipId).toLowerCase() === input;
+    const matchName = data.shipName && data.shipName.toLowerCase().includes(input);
 
-    if (matchesById || matchesByName) {
-      const position = marker.getLatLng();
-      window.map.setView(position, 10);
+    if (matchId || matchName) {
+      const pos = marker.getLatLng();
+      window.map.setView(pos, 10);
       marker.openTooltip();
-
-      updateVesselInfo(
-        shipId,
-        position.lat,
-        position.lng,
-        shipData
-      );
-
+      updateVesselInfo(shipId, pos.lat, pos.lng, data);
       found = true;
       break;
     }
   }
 
-  if (!found) {
-    alert("No ship found matching that MMSI or name.");
+  if (!found) alert("No visible ship found with that MMSI or name.");
+}
+
+document.getElementById("search-button").addEventListener("click", performSearch);
+document.getElementById("search-input").addEventListener("keypress", (e) => {
+  if (e.key === "Enter") {
+    performSearch();
   }
 });
+
+
 
 function simulateAnomaly() {
   const fakeShip = {
@@ -189,40 +222,33 @@ function simulateAnomaly() {
     speed: 500,
     course: 45,
     speed_diff: 200,
-    course_diff: 170
+    course_diff: 170,
   };
 
-  console.log("sending simulated ship to backend:", fakeShip);
-
+  console.log("Sending simulated ship to backend:", fakeShip);
   socket.emit("simulate-ship", fakeShip);
 }
 
-// honk + smoke
+// Honk + Smoke
 document.addEventListener("DOMContentLoaded", () => {
   const boat = document.getElementById("boat");
+  if (!boat) return;
 
   boat.addEventListener("click", () => {
-    const honkSound = new Audio("honk.mp3");
-    honkSound.volume = 0.1;
-    honkSound.play();
+    const honk = new Audio("honk.mp3");
+    honk.volume = 0.1;
+    honk.play();
 
-    for (let i = 0; i < 3; i++) {
-      createSmoke(i * 15);
-    }
+    for (let i = 0; i < 3; i++) createSmoke(i * 15);
   });
 
   function createSmoke(offsetX) {
     const smoke = document.createElement("div");
     smoke.className = "smoke";
-
-    const boatRect = boat.getBoundingClientRect();
-    smoke.style.left = `${boatRect.left + boat.width / 2 + offsetX}px`;
-    smoke.style.bottom = `${window.innerHeight - boatRect.top}px`;
-
+    const rect = boat.getBoundingClientRect();
+    smoke.style.left = `${rect.left + boat.width / 2 + offsetX}px`;
+    smoke.style.bottom = `${window.innerHeight - rect.top}px`;
     document.body.appendChild(smoke);
-
-    setTimeout(() => {
-      smoke.remove();
-    }, 2000);
+    setTimeout(() => smoke.remove(), 2000);
   }
-})
+});

@@ -156,7 +156,7 @@ module.exports = function aisHandler(io) {
             course: parseFloat(row.course),
             timestamp: row.timestamp,
             isAnomaly: isAnomaly,
-            reason: isAnomaly ? "aomalous behaviour detected by Isolation Forest" : undefined,
+            reason: isAnomaly ? "True" : undefined,
           };
 
           if (isAnomaly) {
