@@ -264,6 +264,6 @@ socket.on("model-status", (status) => {
       loadingContainer.style.display = "none";
       loadingText.style.display = "none";
       loadingBar.style.width = "0%";
-    }, 800);
+    }, 6000);
   }
 });
