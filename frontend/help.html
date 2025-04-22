@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="icon" type="image/png" sizes = "128x128" href="boat.png">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Info - AIS Anomaly Detector</title>
+  <link rel="stylesheet" href="styles.css" />
+  <style>
+    html, body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      overflow-y: auto;
+      font-family: 'Montserrat', sans-serif;
+      line-height: 1.6;
+    }
+
+    .content {
+      padding: 2rem;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    h1, h2 {
+      text-align: center;
+      color: #ff9f43
+    }
+
+    a {
+      color: #ff9f43;
+      text-decoration: underline;
+    }
+
+    ul {
+      list-style: none;
+      padding: 0;
+    }
+
+    ul p {
+      margin: 0.5rem 0;
+    }
+
+    code {
+      background: #eee;
+      padding: 2px 4px;
+      border-radius: 4px;
+    }
+
+    .back-link {
+      position: fixed;
+      top: 15px;
+      left: 15px;
+      padding: 8px 12px;
+      background-color: #ff9f43;
+      color: white;
+      text-decoration: none;
+      border-radius: 4px;
+      z-index: 999;
+      font-size: 14px;
+    }
+
+    .back-link:hover {
+      background-color: #8d531c;
+    }
+  </style>
+</head>
+<body>
+  <a class="back-link" href="index.html">← Back to Map</a>
+
+  <div class="content">
+    <p>Welcome to the <strong>AIS Anomaly Detector</strong>. This tool is designed to help you monitor vessels across the world in real time, identify unusual behaviour, and improve awareness of potential maritime security issues.</p>
+
+    <h2>What is AIS?</h2>
+    <p>The <strong>Automatic Identification System (AIS)</strong> is a global tracking system used on ships and by vessel traffic services to monitor maritime traffic. It broadcasts key details about each vessel including:</p>
+    <ul>
+      <p>Ship name</p>
+      <p>Unique ID (MMSI)</p>
+      <p>Position (latitude and longitude)</p>
+      <p>Speed and course</p>
+    </ul>
+
+    <h2>What Does This Tool Do?</h2>
+    <p>This application monitors real-time AIS data and uses machine learning to detect potentially anomalous vessels. These anomalies could indicate erratic movement, unusual speed, or navigation that may pose cybersecurity or safety concerns.</p>
+
+    <h2>How to Use It</h2>
+    <ul>
+      <p><strong>Search:</strong> Enter a ship name or ID (MMSI) in the search bar to locate a specific vessel.</p>
+      <p><strong>Anomaly Toggle:</strong> Use the toggle in the top right to filter and show only anomalous vessels.</p>
+      <p><strong>Simulate:</strong> Click "Simulate Anomaly" to add a fake anomaly for testing.</p>
+      <p><strong>Click on a vessel:</strong> to see detailed information including coordinates, speed, and if it's considered an anomaly.</p>
+    </ul>
+
+    <h2>Understanding Anomalies</h2>
+    <p>Ships flagged as anomalous are visually marked in red. These anomalies are identified using a trained machine learning model that considers movement patterns and other behaviours that deviate from normal expectations.</p>
+  
+    <h2>Troubleshooting</h2>
+    <p><strong>No ships showing?</strong> Wait a few seconds - data loads in real time</p>
+    <p><strong>Search not working?</strong> Make sure the ship is currently visible on the map and avoid searching generic terms like 'unknown'.</p>
+
+    <h2>Who is this for?</h2>
+    <p><strong>Anyone!</strong> Whether you're a student, researcher or just curious about maritime activity, this tool is designed to be simple, educational and interactive.</p>
+
+</div>
+
+  
+</body>
+</html>
