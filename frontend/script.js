@@ -170,7 +170,7 @@ document.addEventListener("change", (e) => {
 function updateVesselInfo(shipId, lat, lon, data) {
   const vesselDetails = document.getElementById("vessel-details");
   vesselDetails.innerHTML = `
-    <p><strong>Ship Name:</strong> ${data.shipName || "Unknown"}</p>
+    <p><strong>Ship Name:</strong> ${data.shipName || "homnk"}</p>
     <p><strong>Ship ID/MMSI:</strong> ${shipId}</p>
     <p><strong>Latitude:</strong> ${lat.toFixed(5)}</p>
     <p><strong>Longitude:</strong> ${lon.toFixed(5)}</p>
