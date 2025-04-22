@@ -53,20 +53,32 @@ document.addEventListener("DOMContentLoaded", () => {
     console.error("failed to initialize map:", error);
   }
 
-  const button = document.createElement("button");
-  button.id = "simulate-anomaly-button";
-  button.textContent = "Simulate Anomaly";
-  button.style.position = "absolute";
-  button.style.top = "10px";
-  button.style.right = "10px";
-  button.style.padding = "10px";
-  button.style.backgroundColor = "#D27936";
-  button.style.color = "white";
-  button.style.border = "none";
-  button.style.cursor = "pointer";
-  document.body.appendChild(button);
+  const simulateButton = document.createElement("button");
+  simulateButton.id = "simulate-anomaly-button";
+  simulateButton.textContent = "Simulate Anomaly";
+  simulateButton.style.position = "absolute";
+  simulateButton.style.top = "25px";
+  simulateButton.style.right = "20px";
+  simulateButton.style.padding = "8px 12px";
+  simulateButton.style.backgroundColor = "#ff9f43";
+  simulateButton.style.color = "white";
+  simulateButton.style.border = "none";
+  simulateButton.style.borderRadius = "4px";
+  simulateButton.style.fontFamily = "'Montserrat', sans-serif";
+  simulateButton.style.fontSize = "14px";
+  simulateButton.style.boxShadow = "0 2px 5px rgba(0,0,0,0.3)";
+  simulateButton.style.cursor = "pointer";
+  simulateButton.style.zIndex = "1001";
 
-  button.addEventListener("click", simulateAnomaly);
+  simulateButton.addEventListener("mouseenter", () => {
+    simulateButton.style.backgroundColor = "#8d531c";
+  });
+  simulateButton.addEventListener("mouseleave", () => {
+    simulateButton.style.backgroundColor = "#ff9f43";
+  });
+
+  simulateButton.addEventListener("click", simulateAnomaly);
+  document.body.appendChild(simulateButton);
 });
 
 const markers = {};
@@ -222,10 +234,8 @@ function simulateAnomaly() {
 }
 
 // Honk + Smoke
-document.addEventListener("DOMContentLoaded", () => {
-  const boat = document.getElementById("boat");
-  if (!boat) return;
-
+const boat = document.getElementById("boat");
+if (boat) {
   boat.addEventListener("click", () => {
     const honk = new Audio("honk.mp3");
     honk.volume = 0.1;
@@ -243,7 +253,8 @@ document.addEventListener("DOMContentLoaded", () => {
     document.body.appendChild(smoke);
     setTimeout(() => smoke.remove(), 2000);
   }
-});
+}
+
 
 socket.on("model-status", (status) => {
   const loadingContainer = document.getElementById("loading-container");
