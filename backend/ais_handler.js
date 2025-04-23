@@ -18,6 +18,11 @@ module.exports = function aisHandler(io) {
   let csvHeaderWritten = false;
 
   const livePath = path.join(__dirname, "../live_ais_data.csv");
+  const historicPath = path.join(__dirname, "../historic_anomalies.csv");
+
+  if (!fs.existsSync(historicPath)) {
+    fs.writeFileSync(historicPath, "mmsi,lat,lon,speed,course,timestamp\n");
+  }
 
   socket.addEventListener("open", () => {
     console.log("connected to AIS stream");
@@ -169,7 +174,12 @@ module.exports = function aisHandler(io) {
           io.emit("ais-data", shipData);
           console.log("emitting AIS data to frontend:", shipData);
 
-          if (isAnomaly) anomalies.push(shipData);
+          if (isAnomaly) {
+            anomalies.push(shipData);
+
+            const line = `${shipData.shipId},${shipData.latitude},${shipData.longitude},${shipData.speed},${shipData.course},${shipData.timestamp}\n`;
+            fs.appendFileSync(historicPath, line);
+          }
         })
         .on("end", () => {
           if (anomalies.length === 0) {
@@ -181,5 +191,5 @@ module.exports = function aisHandler(io) {
           csvHeaderWritten = false;
         });
     });
-  }, 2 * 60 * 1000); // every 2 minutes not seconds (1/8 of 2 minutes)
+  }, 2 * 60 * 1000/8); //every 2 minutes
 };

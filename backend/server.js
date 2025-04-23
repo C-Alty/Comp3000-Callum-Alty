@@ -7,7 +7,6 @@ const { Server } = require("socket.io");
 const path = require("path");
 const aisHandler = require('./ais_handler'); 
 
-
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
@@ -20,6 +19,7 @@ const io = new Server(server, {
 
 const PORT = process.env.PORT || 8080;
 
+app.use(express.static(path.join(__dirname, "../"))); // To serve CSVs from root
 app.use(express.static(path.join(__dirname, "../frontend")));
 console.log("static files loaded");
 

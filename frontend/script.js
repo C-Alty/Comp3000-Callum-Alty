@@ -10,6 +10,33 @@ document.addEventListener("DOMContentLoaded", () => {
       doubleClickZoom: true,
     });
 
+    fetch('/historic_anomalies.csv')
+      .then(response => response.text())
+      .then(csvText => {
+        const lines = csvText.trim().split("\n").slice(1); // Skip header
+        const list = document.getElementById("anomaly-list");
+        list.innerHTML = ""; // Clear loading...
+
+        if (lines.length === 0) {
+          list.innerHTML = "<li>No historic anomalies yet.</li>";
+          return;
+        }
+
+        const seen = new Set();
+        lines.reverse().forEach(line => {
+          const [mmsi, lat, lon, speed, course, timestamp] = line.split(",");
+          if (seen.has(mmsi)) return;
+          seen.add(mmsi);
+          const item = document.createElement("li");
+          item.textContent = `${mmsi} @ ${parseFloat(lat).toFixed(2)}, ${parseFloat(lon).toFixed(2)} (${timestamp.split("T")[0]})`;
+          list.appendChild(item);
+        });
+      })
+      .catch(err => {
+        console.error("Failed to load historic anomalies:", err);
+        document.getElementById("anomaly-list").innerHTML = "<li>Error loading anomalies</li>";
+      });
+
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
       maxZoom: 19,
       noWrap: true,
@@ -26,9 +53,11 @@ document.addEventListener("DOMContentLoaded", () => {
       });
     });
 
-    // Cluster group
+    // Marker groups
     window.clusterGroup = L.markerClusterGroup();
+    window.anomalyGroup = L.layerGroup();
     window.map.addLayer(window.clusterGroup);
+    window.map.addLayer(window.anomalyGroup);
 
     // Anomaly toggle
     window.anomalousOnlyToggle = L.control({ position: "topright" });
@@ -47,6 +76,14 @@ document.addEventListener("DOMContentLoaded", () => {
       return container;
     };
     window.anomalousOnlyToggle.addTo(window.map);
+
+    // Zoom event to resize marker icons
+    window.map.on("zoomend", () => {
+      Object.values(markers).forEach((marker) => {
+        const newIcon = getScaledIcon(marker.options.isAnomaly);
+        marker.setIcon(newIcon);
+      });
+    });
 
     console.log("map initialized!");
   } catch (error) {
@@ -84,6 +121,17 @@ document.addEventListener("DOMContentLoaded", () => {
 const markers = {};
 const socket = io();
 
+function getScaledIcon(isAnomaly) {
+  const zoom = window.map.getZoom();
+  const size = Math.max(8, Math.min(zoom * 1, 18)); 
+  return L.icon({
+    iconUrl: isAnomaly ? "red-marker.png" : "blue-marker.png",
+    iconSize: [size, size],
+    iconAnchor: [size / 2, size / 2],
+    popupAnchor: [0, -size / 2],
+  });
+}
+
 socket.on("connect", () => console.log("websocket connected"));
 socket.on("disconnect", () => console.warn("websocket disconnected"));
 socket.on("connect_error", (err) => console.error("websocket error:", err));
@@ -95,14 +143,7 @@ socket.on("ais-data", (data) => {
   }
 
   const { shipId, latitude, longitude, isAnomaly, reason, ...restData } = data;
-
-  const markerIcon = L.icon({
-    iconUrl: isAnomaly ? "red-marker.png" : "blue-marker.png",
-    iconSize: [10, 10],
-    iconAnchor: [12, 41],
-    popupAnchor: [1, -34],
-  });
-
+  const markerIcon = getScaledIcon(isAnomaly);
   let marker = markers[shipId];
 
   if (marker) {
@@ -137,13 +178,25 @@ socket.on("ais-data", (data) => {
 
   const onlyAnomalies = document.getElementById("anomaly-toggle")?.checked;
 
-  if (!onlyAnomalies || isAnomaly) {
-    if (!window.clusterGroup.hasLayer(marker)) {
-      window.clusterGroup.addLayer(marker);
+  if (isAnomaly) {
+    if (!window.anomalyGroup.hasLayer(marker)) {
+      window.anomalyGroup.addLayer(marker);
     }
-  } else {
     if (window.clusterGroup.hasLayer(marker)) {
       window.clusterGroup.removeLayer(marker);
+    }
+  } else {
+    if (onlyAnomalies) {
+      if (window.clusterGroup.hasLayer(marker)) {
+        window.clusterGroup.removeLayer(marker);
+      }
+    } else {
+      if (!window.clusterGroup.hasLayer(marker)) {
+        window.clusterGroup.addLayer(marker);
+      }
+    }
+    if (window.anomalyGroup.hasLayer(marker)) {
+      window.anomalyGroup.removeLayer(marker);
     }
   }
 
@@ -153,14 +206,17 @@ socket.on("ais-data", (data) => {
   }
 });
 
-// Handle anomaly toggle
 document.addEventListener("change", (e) => {
   if (e.target && e.target.id === "anomaly-toggle") {
     const showOnlyAnomalies = e.target.checked;
     window.clusterGroup.clearLayers();
+    window.anomalyGroup.clearLayers();
+
     Object.values(markers).forEach((marker) => {
       const isAnomaly = marker.options.isAnomaly;
-      if (!showOnlyAnomalies || isAnomaly) {
+      if (isAnomaly) {
+        window.anomalyGroup.addLayer(marker);
+      } else if (!showOnlyAnomalies) {
         window.clusterGroup.addLayer(marker);
       }
     });
@@ -192,7 +248,7 @@ function performSearch() {
 
   for (const shipId in markers) {
     const marker = markers[shipId];
-    if (!window.clusterGroup.hasLayer(marker)) continue;
+    if (!window.clusterGroup.hasLayer(marker) && !window.anomalyGroup.hasLayer(marker)) continue;
 
     const data = marker.options.shipData || {};
     const matchId = String(shipId).toLowerCase() === input;
@@ -234,7 +290,6 @@ function simulateAnomaly() {
   socket.emit("simulate-ship", fakeShip);
 }
 
-// Honk + Smoke
 const boat = document.getElementById("boat");
 if (boat) {
   boat.addEventListener("click", () => {
@@ -256,7 +311,6 @@ if (boat) {
   }
 }
 
-
 socket.on("model-status", (status) => {
   const loadingContainer = document.getElementById("loading-container");
   const loadingBar = document.getElementById("loading-bar");
@@ -266,7 +320,6 @@ socket.on("model-status", (status) => {
     loadingContainer.style.display = "block";
     loadingText.style.display = "block";
     loadingBar.style.width = "0%";
-
     setTimeout(() => {
       loadingBar.style.width = "60%";
     }, 100);
@@ -277,5 +330,28 @@ socket.on("model-status", (status) => {
       loadingText.style.display = "none";
       loadingBar.style.width = "0%";
     }, 6000);
+  }
+});
+
+// Modal logic
+document.addEventListener("DOMContentLoaded", () => {
+  const helpButton = document.getElementById("help-button");
+  const modal = document.getElementById("info-modal");
+  const closeModal = document.getElementById("close-info-modal");
+
+  if (helpButton && modal && closeModal) {
+    helpButton.addEventListener("click", () => {
+      modal.style.display = "block";
+    });
+
+    closeModal.addEventListener("click", () => {
+      modal.style.display = "none";
+    });
+
+    window.addEventListener("click", (e) => {
+      if (e.target === modal) {
+        modal.style.display = "none";
+      }
+    });
   }
 });
