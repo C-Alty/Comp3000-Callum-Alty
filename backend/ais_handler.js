@@ -191,5 +191,5 @@ module.exports = function aisHandler(io) {
           csvHeaderWritten = false;
         });
     });
-  }, 2 * 60 * 1000); //every 2 minutes
+  }, 2 * 60 * 1000/8); //every 2 minutes
 };

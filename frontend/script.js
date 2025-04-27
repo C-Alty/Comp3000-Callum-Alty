@@ -238,35 +238,51 @@ function updateVesselInfo(shipId, lat, lon, data) {
 
 function performSearch() {
   const input = document.getElementById("search-input").value.trim().toLowerCase();
+  const resultsList = document.getElementById("search-results");
+  resultsList.innerHTML = ""; // Clear old results
+
   const banned = ["", "unknown", "null", "undefined", "none", "???"];
   if (banned.includes(input)) {
-    alert("Please enter a valid Ship Name or ID.");
+    resultsList.style.display = "none";
     return;
   }
 
-  let found = false;
+  const results = [];
 
   for (const shipId in markers) {
     const marker = markers[shipId];
-    if (!window.clusterGroup.hasLayer(marker) && !window.anomalyGroup.hasLayer(marker)) continue;
-
     const data = marker.options.shipData || {};
-    const matchId = String(shipId).toLowerCase() === input;
+    const matchId = String(shipId).toLowerCase().includes(input);
     const matchName = data.shipName && data.shipName.toLowerCase().includes(input);
 
     if (matchId || matchName) {
+      results.push({ marker, data, shipId });
+    }
+  }
+
+  if (results.length === 0) {
+    resultsList.innerHTML = "<li style='padding: 8px 12px;'>No matches found.</li>";
+    resultsList.style.display = "block";
+    return;
+  }
+
+  results.forEach(({ marker, data, shipId }) => {
+    const li = document.createElement("li");
+    li.textContent = `${data.shipName || "Unknown"} (${shipId})`;
+    li.addEventListener("click", () => {
       const pos = marker.getLatLng();
       window.map.setView(pos, 10);
       marker.openTooltip();
       updateVesselInfo(shipId, pos.lat, pos.lng, data);
-      found = true;
-      break;
-    }
-  }
+      resultsList.style.display = "none";
+    });
+    resultsList.appendChild(li);
+  });
 
-  if (!found) alert("No visible ship found with that MMSI or name.");
+  resultsList.style.display = "block";
 }
 
+document.getElementById("search-input").addEventListener("keyup", performSearch);
 document.getElementById("search-button").addEventListener("click", performSearch);
 document.getElementById("search-input").addEventListener("keypress", (e) => {
   if (e.key === "Enter") {
@@ -274,13 +290,14 @@ document.getElementById("search-input").addEventListener("keypress", (e) => {
   }
 });
 
+
 function simulateAnomaly() {
   const fakeShip = {
     shipName: "homnk",
     shipId: "999999999",
     latitude: 64.5,
     longitude: 10.0,
-    speed: 500,
+    speed: 300,
     course: 45,
     speed_diff: 200,
     course_diff: 170,
@@ -354,4 +371,13 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     });
   }
+  document.addEventListener("click", (e) => {
+    const input = document.getElementById("search-input");
+    const results = document.getElementById("search-results");
+  
+    if (!input.contains(e.target) && !results.contains(e.target)) {
+      results.style.display = "none";
+    }
+  });
+  
 });
