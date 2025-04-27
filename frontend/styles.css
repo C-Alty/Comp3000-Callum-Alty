@@ -269,38 +269,23 @@ input:checked + .slider:before {
   z-index: 998;
 }
 
-#help-button {
-  position: fixed; 
-  top: 70px;     
-  right: 22px;      
-  background-color: #ff9f43;
-  color: white;
-  padding: 8px 12px;
-  font-size: 14px;
-  font-family: 'Montserrat', sans-serif;
-  border: none;
-  border-radius: 4px;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.3);
-  z-index: 1001;
-  transition: background-color 0.2s ease;
-}
-
-#help-button:hover {
-  background-color: #8d531c;
-}
-
 #historic-anomalies {
   position: absolute;
-  top: 150px;
+  top: 65px; /* same level as map start */
   right: 40px;
   width: 400px;
+  height: 81.5vh; /* match the map height */
   background: white;
   padding: 15px;
   border-radius: 6px;
   box-shadow: 0px 2px 8px rgba(0, 0, 0, 0.2);
   font-family: 'Montserrat', sans-serif;
   z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
 }
+
 
 #historic-anomalies h3 {
   color:black;
@@ -311,10 +296,18 @@ input:checked + .slider:before {
 }
 
 #anomaly-list {
-  list-style-type: none;
-  padding: 0;
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: center;
   margin: 0;
+  padding: 0;
+  list-style: none;
+  overflow-y: auto; /* NEW - allow scroll */
+  max-height: calc(85vh - 100px); /* NEW - prevent overflow (if full anomalies) */
 }
+
 
 #anomaly-list li {
   color:black;
@@ -419,6 +412,59 @@ input:checked + .slider:before {
 #search-results li:last-child {
   border-bottom: none;
 }
+
+body {
+  text-align: center;
+  font-family: 'Montserrat', Arial, sans-serif;
+  background: linear-gradient(to bottom, #0a1931, #185adb);
+  color: #ffffff;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+#title-container {
+  width: 100%;
+  text-align: center;
+  margin-top: 10px;
+}
+
+#title-content {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#title-content h1 {
+  font-size: 28px;
+  color: white;
+  margin: 0;
+  padding: 0 10px;
+}
+
+#help-button {
+  background-color: #ff9f43;
+  border: none;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  font-size: 18px;
+  font-weight: bold;
+  color: white;
+  margin-left: 10px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s ease;
+}
+
+#help-button:hover {
+  background-color: #d17c2b;
+}
+
+
+
 
 
 

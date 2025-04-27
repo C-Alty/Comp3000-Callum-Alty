@@ -1,72 +1,76 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <link rel="icon" type="image/png" sizes = "128x128" href="boat.png">
-
+  <link rel="icon" type="image/png" sizes="128x128" href="boat.png">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  
   <title>AIS Anomaly Detector</title>
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
-  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
-<script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
 </head>
+
 <body>
-  <h1>AIS Anomaly Detector</h1>
-  
-  <button id="help-button">Info</button>
+<div id="title-container">
+  <div id="title-content">
+    <h1>AIS Anomaly Detector</h1>
+    <button id="help-button">?</button>
+  </div>
+</div>
+
+    
 
 
-  <!-- search -->
+  <!-- SEARCH BAR -->
   <div id="search-container">
     <input type="text" id="search-input" placeholder="Ship Name or ID">
     <button id="search-button">Search</button>
   </div>
   <ul id="search-results"></ul>
 
-
-    <!-- Vessel Information Panel -->
-    <div id="vessel-info">
-      <h3>Vessel Information</h3>
-      <div id="vessel-details">
-        <p><strong>Ship Name:</strong> -</p>
-        <p><strong>Ship ID/MMSI:</strong> -</p>
-        <p><strong>Latitude:</strong> -</p>
-        <p><strong>Longitude:</strong> -</p>
-        <p><strong>Speed:</strong> -</p>
-        <p><strong>Course:</strong> -</p>
-        <hr>
-      </div>
+  <!-- VESSEL INFORMATION -->
+  <div id="vessel-info">
+    <h3>Vessel Information</h3>
+    <div id="vessel-details">
+      <p><strong>Ship Name:</strong> -</p>
+      <p><strong>Ship ID/MMSI:</strong> -</p>
+      <p><strong>Latitude:</strong> -</p>
+      <p><strong>Longitude:</strong> -</p>
+      <p><strong>Speed:</strong> -</p>
+      <p><strong>Course:</strong> -</p>
+      <hr>
     </div>
+  </div>
 
-    <!-- Historic Anomalies Info Box -->
-<div id="historic-anomalies" class="info-box">
-  <h3>Historic Anomalies</h3>
-  <ul id="anomaly-list">
-    <li>Loading...</li>
-  </ul>
-</div>
+  <!-- HISTORIC ANOMALIES -->
+  <div id="historic-anomalies" class="info-box">
+    <h3>Historic Anomalies</h3>
+    <ul id="anomaly-list">
+      <li>Loading...</li>
+    </ul>
+    
+  </div>
 
+  <!-- MAP -->
+  <div id="map"></div>
 
-  <!-- Footer Loading Bar -->
+  <!-- FOOTER -->
   <div id="loading-container">
     <p id="loading-text">Checking for anomalies...</p>
     <div id="loading-bar"></div>
   </div>
 
-  <div id="map"></div>
-
+  <!-- BOAT DECORATION -->
   <img id="boat" src="boat.png" alt="Boat">
 
+  <!-- SCRIPTS -->
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
   <script src="/socket.io/socket.io.js"></script>
-  <script src="script.js"></script> 
-  
-<!-- Info Modal -->
+  <script src="script.js"></script>
+
+ <!-- Info Modal -->
 <div id="info-modal" class="modal">
   <div class="modal-content">
     <span id="close-info-modal" class="close">&times;</span>
@@ -112,7 +116,5 @@
     </div>
   </div>
 </div>
-
-
 </body>
 </html>

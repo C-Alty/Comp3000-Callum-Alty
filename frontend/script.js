@@ -77,45 +77,47 @@ document.addEventListener("DOMContentLoaded", () => {
     };
     window.anomalousOnlyToggle.addTo(window.map);
 
-    // Zoom event to resize marker icons
-    window.map.on("zoomend", () => {
-      Object.values(markers).forEach((marker) => {
-        const newIcon = getScaledIcon(marker.options.isAnomaly);
-        marker.setIcon(newIcon);
-      });
-    });
+   // Zoom event to resize marker icons
+window.map.on("zoomend", () => {
+  Object.values(markers).forEach((marker) => {
+    const newIcon = getScaledIcon(marker.options.isAnomaly);
+    marker.setIcon(newIcon);
+  });
+});
 
-    console.log("map initialized!");
-  } catch (error) {
-    console.error("failed to initialize map:", error);
-  }
+console.log("map initialized!");
+} catch (error) {
+  console.error("failed to initialize map:", error);
+}
 
-  const simulateButton = document.createElement("button");
-  simulateButton.id = "simulate-anomaly-button";
-  simulateButton.textContent = "Simulate Anomaly";
-  simulateButton.style.position = "absolute";
-  simulateButton.style.top = "25px";
-  simulateButton.style.right = "20px";
-  simulateButton.style.padding = "8px 12px";
+// ---- UPDATED SIMULATE BUTTON CODE START ----
+const simulateButton = document.createElement("button");
+simulateButton.id = "simulate-anomaly-button";
+simulateButton.textContent = "Simulate Anomaly";
+simulateButton.style.padding = "10px 20px";
+simulateButton.style.marginTop = "10px";
+simulateButton.style.backgroundColor = "#ff9f43";
+simulateButton.style.color = "white";
+simulateButton.style.border = "none";
+simulateButton.style.borderRadius = "8px";
+simulateButton.style.fontFamily = "'Montserrat', sans-serif";
+simulateButton.style.fontSize = "14px";
+simulateButton.style.boxShadow = "0 2px 5px rgba(0,0,0,0.3)";
+simulateButton.style.cursor = "pointer";
+
+simulateButton.addEventListener("mouseenter", () => {
+  simulateButton.style.backgroundColor = "#8d531c";
+});
+simulateButton.addEventListener("mouseleave", () => {
   simulateButton.style.backgroundColor = "#ff9f43";
-  simulateButton.style.color = "white";
-  simulateButton.style.border = "none";
-  simulateButton.style.borderRadius = "4px";
-  simulateButton.style.fontFamily = "'Montserrat', sans-serif";
-  simulateButton.style.fontSize = "14px";
-  simulateButton.style.boxShadow = "0 2px 5px rgba(0,0,0,0.3)";
-  simulateButton.style.cursor = "pointer";
-  simulateButton.style.zIndex = "1001";
+});
 
-  simulateButton.addEventListener("mouseenter", () => {
-    simulateButton.style.backgroundColor = "#8d531c";
-  });
-  simulateButton.addEventListener("mouseleave", () => {
-    simulateButton.style.backgroundColor = "#ff9f43";
-  });
+simulateButton.addEventListener("click", simulateAnomaly);
 
-  simulateButton.addEventListener("click", simulateAnomaly);
-  document.body.appendChild(simulateButton);
+// 👇 NEW: append to the historic anomalies box instead of body
+const historicAnomaliesBox = document.getElementById("historic-anomalies");
+historicAnomaliesBox.appendChild(simulateButton);
+// ---- UPDATED SIMULATE BUTTON CODE END ----
 });
 
 const markers = {};
