@@ -36,7 +36,7 @@ df["weighted_speed"] = df["speed"] * 5
 df["weighted_speed_diff"] = df["speed_diff"] * 5
 
 # Extract matching features for prediction
-features = df[["lat", "lon", "weighted_speed", "course", "weighted_speed_diff", "course_diff"]].fillna(0)
+features = df[["lat", "lon", "speed", "course", "speed_diff", "course_diff"]].fillna(0)
 
 # Predict anomalies
 df["anomaly"] = model.predict(features)
