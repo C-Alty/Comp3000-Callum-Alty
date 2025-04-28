@@ -3,7 +3,7 @@
 # Maritime Security Threat Detection
 ### Supervisor: Rory Hopcraft
 
-This project will be aimed at the stakeholders in maritime security, for example shipping companies in order to ensure the security of maritime activities and detect current or emerging threats. It will use open-source data including AIS databases, geopolitical information and maritime traffic to monitor and report potential security risks. It will explore using machine learning techniques to detect anomalies and any threats in real time.
+This project is aimed at the stakeholders in maritime security, for example shipping companies in order to ensure the security of maritime activities and detect current or emerging threats. It uses live AIS data in order to detect anomalies in real time.
 
 Trello: https://trello.com/invite/b/67193e5f71c23f8ba3c101b1/ATTI6ac076cdcac9f91573a789cac28e283169E2259E/comp-3000-callum-alty
 
@@ -23,7 +23,8 @@ Trello: https://trello.com/invite/b/67193e5f71c23f8ba3c101b1/ATTI6ac076cdcac9f91
 - **Anomaly Detection:** The ML model - isolation forest - flags anomalies
 - **User Interaction:**
   - Hover a ship to see details
-  - Use the search bar to find vessels 
+  - Use the search bar to find vessels
+  - Historic Anomalies are displayed for review
 
 ## 🛠️ Technologies Used
 - **Frontend:** HTML, CSS, Javascript, Leaflet.js
@@ -32,6 +33,13 @@ Trello: https://trello.com/invite/b/67193e5f71c23f8ba3c101b1/ATTI6ac076cdcac9f91
 - **Data sources:**
     - AIS stream from AISStream.io
     - Historical AIS data from University of Plymouth
+- **Development Tools:**
+    - Visual Studio Code, Git, GitHub
+      
+## 📢 IMPORTANT NOTE
+- This project was developed for **academic purposes**
+- It is not a certifiied security tool and should be used for educational demonstration only
+  
 
 
 
