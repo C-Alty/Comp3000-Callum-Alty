@@ -1,6 +1,6 @@
 # Comp3000-Callum-Alty
 
-# Maritime Security Threat Detection
+# AIS Anomaly Detector
 ### Supervisor: Rory Hopcraft
 
 This project is aimed at the stakeholders in maritime security, for example shipping companies in order to ensure the security of maritime activities and detect current or emerging threats. It uses live AIS data in order to detect anomalies in real time.
