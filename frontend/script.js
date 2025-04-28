@@ -24,26 +24,17 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const seen = new Set();
         lines.reverse().forEach(line => {
-          const parts = line.split(",");
-          if (parts.length < 6) {
-            console.warn("Skipping invalid line:", line);
-            return;
-          }
-
-          const [mmsi, lat, lon, speed, course, timestamp] = parts;
-
+          const [mmsi, lat, lon, speed, course, timestamp] = line.split(",");
           if (seen.has(mmsi)) return;
           seen.add(mmsi);
-
           const item = document.createElement("li");
           item.textContent = `${mmsi} @ ${parseFloat(lat).toFixed(2)}, ${parseFloat(lon).toFixed(2)} (${timestamp.split("T")[0]})`;
           list.appendChild(item);
         });
       })
-      .catch(error => {
-        console.error('Failed to load historic anomalies:', error);
-        const list = document.getElementById("anomaly-list");
-        list.innerHTML = "<li>Failed to load historic anomalies.</li>";
+      .catch(err => {
+        console.error("Failed to load historic anomalies:", err);
+        document.getElementById("anomaly-list").innerHTML = "<li>Error loading anomalies</li>";
       });
 
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
@@ -62,11 +53,13 @@ document.addEventListener("DOMContentLoaded", () => {
       });
     });
 
+    // Marker groups
     window.clusterGroup = L.markerClusterGroup();
     window.anomalyGroup = L.layerGroup();
     window.map.addLayer(window.clusterGroup);
     window.map.addLayer(window.anomalyGroup);
 
+    // Anomaly toggle
     window.anomalousOnlyToggle = L.control({ position: "topright" });
     window.anomalousOnlyToggle.onAdd = function () {
       const container = L.DomUtil.create("div", "leaflet-control leaflet-bar anomaly-toggle-container");
@@ -84,42 +77,47 @@ document.addEventListener("DOMContentLoaded", () => {
     };
     window.anomalousOnlyToggle.addTo(window.map);
 
-    window.map.on("zoomend", () => {
-      Object.values(markers).forEach((marker) => {
-        const newIcon = getScaledIcon(marker.options.isAnomaly);
-        marker.setIcon(newIcon);
-      });
-    });
+   // Zoom event to resize marker icons
+window.map.on("zoomend", () => {
+  Object.values(markers).forEach((marker) => {
+    const newIcon = getScaledIcon(marker.options.isAnomaly);
+    marker.setIcon(newIcon);
+  });
+});
 
-    console.log("Map initialized!");
-  } catch (error) {
-    console.error("Failed to initialize map:", error);
-  }
+console.log("map initialized!");
+} catch (error) {
+  console.error("failed to initialize map:", error);
+}
 
-  const simulateButton = document.createElement("button");
-  simulateButton.id = "simulate-anomaly-button";
-  simulateButton.textContent = "Simulate Anomaly";
-  simulateButton.style.padding = "10px 20px";
-  simulateButton.style.marginTop = "10px";
+// ---- UPDATED SIMULATE BUTTON CODE START ----
+const simulateButton = document.createElement("button");
+simulateButton.id = "simulate-anomaly-button";
+simulateButton.textContent = "Simulate Anomaly";
+simulateButton.style.padding = "10px 20px";
+simulateButton.style.marginTop = "10px";
+simulateButton.style.backgroundColor = "#ff9f43";
+simulateButton.style.color = "white";
+simulateButton.style.border = "none";
+simulateButton.style.borderRadius = "8px";
+simulateButton.style.fontFamily = "'Montserrat', sans-serif";
+simulateButton.style.fontSize = "14px";
+simulateButton.style.boxShadow = "0 2px 5px rgba(0,0,0,0.3)";
+simulateButton.style.cursor = "pointer";
+
+simulateButton.addEventListener("mouseenter", () => {
+  simulateButton.style.backgroundColor = "#8d531c";
+});
+simulateButton.addEventListener("mouseleave", () => {
   simulateButton.style.backgroundColor = "#ff9f43";
-  simulateButton.style.color = "white";
-  simulateButton.style.border = "none";
-  simulateButton.style.borderRadius = "8px";
-  simulateButton.style.fontFamily = "'Montserrat', sans-serif";
-  simulateButton.style.fontSize = "14px";
-  simulateButton.style.boxShadow = "0 2px 5px rgba(0,0,0,0.3)";
-  simulateButton.style.cursor = "pointer";
+});
 
-  simulateButton.addEventListener("mouseenter", () => {
-    simulateButton.style.backgroundColor = "#8d531c";
-  });
-  simulateButton.addEventListener("mouseleave", () => {
-    simulateButton.style.backgroundColor = "#ff9f43";
-  });
-  simulateButton.addEventListener("click", simulateAnomaly);
+simulateButton.addEventListener("click", simulateAnomaly);
 
-  const historicAnomaliesBox = document.getElementById("historic-anomalies");
-  historicAnomaliesBox.appendChild(simulateButton);
+// 👇 NEW: append to the historic anomalies box instead of body
+const historicAnomaliesBox = document.getElementById("historic-anomalies");
+historicAnomaliesBox.appendChild(simulateButton);
+// ---- UPDATED SIMULATE BUTTON CODE END ----
 });
 
 const markers = {};
@@ -127,7 +125,7 @@ const socket = io();
 
 function getScaledIcon(isAnomaly) {
   const zoom = window.map.getZoom();
-  const size = Math.max(8, Math.min(zoom * 1, 18));
+  const size = Math.max(8, Math.min(zoom * 1, 18)); 
   return L.icon({
     iconUrl: isAnomaly ? "red-marker.png" : "blue-marker.png",
     iconSize: [size, size],
@@ -136,13 +134,13 @@ function getScaledIcon(isAnomaly) {
   });
 }
 
-socket.on("connect", () => console.log("WebSocket connected"));
-socket.on("disconnect", () => console.warn("WebSocket disconnected"));
-socket.on("connect_error", (err) => console.error("WebSocket error:", err));
+socket.on("connect", () => console.log("websocket connected"));
+socket.on("disconnect", () => console.warn("websocket disconnected"));
+socket.on("connect_error", (err) => console.error("websocket error:", err));
 
 socket.on("ais-data", (data) => {
   if (!data || !data.shipId || typeof data.latitude !== "number" || typeof data.longitude !== "number") {
-    console.warn("Invalid AIS data:", data);
+    console.warn("invalid AIS data:", data);
     return;
   }
 
@@ -243,7 +241,7 @@ function updateVesselInfo(shipId, lat, lon, data) {
 function performSearch() {
   const input = document.getElementById("search-input").value.trim().toLowerCase();
   const resultsList = document.getElementById("search-results");
-  resultsList.innerHTML = "";
+  resultsList.innerHTML = ""; // Clear old results
 
   const banned = ["", "unknown", "null", "undefined", "none", "???"];
   if (banned.includes(input)) {
@@ -294,15 +292,16 @@ document.getElementById("search-input").addEventListener("keypress", (e) => {
   }
 });
 
+
 function simulateAnomaly() {
   const fakeShip = {
     shipName: "homnk",
     shipId: "999999999",
     latitude: 64.5,
     longitude: 10.0,
-    speed: 500,
+    speed: 300,
     course: 45,
-    speed_diff: 500,
+    speed_diff: 200,
     course_diff: 170,
   };
 
@@ -310,7 +309,50 @@ function simulateAnomaly() {
   socket.emit("simulate-ship", fakeShip);
 }
 
-// Optional: Modal help popup for info
+const boat = document.getElementById("boat");
+if (boat) {
+  boat.addEventListener("click", () => {
+    const honk = new Audio("honk.mp3");
+    honk.volume = 0.1;
+    honk.play();
+
+    for (let i = 0; i < 3; i++) createSmoke(i * 15);
+  });
+
+  function createSmoke(offsetX) {
+    const smoke = document.createElement("div");
+    smoke.className = "smoke";
+    const rect = boat.getBoundingClientRect();
+    smoke.style.left = `${rect.left + boat.width / 2 + offsetX}px`;
+    smoke.style.bottom = `${window.innerHeight - rect.top}px`;
+    document.body.appendChild(smoke);
+    setTimeout(() => smoke.remove(), 2000);
+  }
+}
+
+socket.on("model-status", (status) => {
+  const loadingContainer = document.getElementById("loading-container");
+  const loadingBar = document.getElementById("loading-bar");
+  const loadingText = document.getElementById("loading-text");
+
+  if (status.running) {
+    loadingContainer.style.display = "block";
+    loadingText.style.display = "block";
+    loadingBar.style.width = "0%";
+    setTimeout(() => {
+      loadingBar.style.width = "60%";
+    }, 100);
+  } else {
+    loadingBar.style.width = "100%";
+    setTimeout(() => {
+      loadingContainer.style.display = "none";
+      loadingText.style.display = "none";
+      loadingBar.style.width = "0%";
+    }, 6000);
+  }
+});
+
+// Modal logic
 document.addEventListener("DOMContentLoaded", () => {
   const helpButton = document.getElementById("help-button");
   const modal = document.getElementById("info-modal");
@@ -331,13 +373,13 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     });
   }
-
   document.addEventListener("click", (e) => {
     const input = document.getElementById("search-input");
     const results = document.getElementById("search-results");
-
+  
     if (!input.contains(e.target) && !results.contains(e.target)) {
       results.style.display = "none";
     }
   });
+  
 });
