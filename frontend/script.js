@@ -294,7 +294,7 @@ function simulateAnomaly() {
     shipName: "Unknown",
     shipId: "999999999",
     latitude: 64.5,
-    longitude: 15.0,
+    longitude: 10.0,
     speed: 500,
     course: 45,
     speed_diff: 200,
