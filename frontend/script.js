@@ -299,7 +299,7 @@ function simulateAnomaly() {
     shipId: "999999999",
     latitude: 64.5,
     longitude: 10.0,
-    speed: 300,
+    speed: 500,
     course: 45,
     speed_diff: 200,
     course_diff: 170,
