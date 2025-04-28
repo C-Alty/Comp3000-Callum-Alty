@@ -5,10 +5,6 @@
 
 This project is aimed at the stakeholders in maritime security, for example shipping companies in order to ensure the security of maritime activities and detect current or emerging threats. It uses live AIS data in order to detect anomalies in real time.
 
-Trello: https://trello.com/invite/b/67193e5f71c23f8ba3c101b1/ATTI6ac076cdcac9f91573a789cac28e283169E2259E/comp-3000-callum-alty
-
-![Gantt Chart Project Initiation](https://github.com/user-attachments/assets/878cc37f-6480-46fa-bdec-da686a011727)
-
 ## 🌟 Features
 
 -  **Live AIS Data Feed:** Displays real-time ship locations using **Leaflet.js** and WebSockets.
