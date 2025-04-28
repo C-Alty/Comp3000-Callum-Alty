@@ -89,8 +89,6 @@ console.log("map initialized!");
 } catch (error) {
   console.error("failed to initialize map:", error);
 }
-
-// ---- UPDATED SIMULATE BUTTON CODE START ----
 const simulateButton = document.createElement("button");
 simulateButton.id = "simulate-anomaly-button";
 simulateButton.textContent = "Simulate Anomaly";
@@ -114,10 +112,8 @@ simulateButton.addEventListener("mouseleave", () => {
 
 simulateButton.addEventListener("click", simulateAnomaly);
 
-// 👇 NEW: append to the historic anomalies box instead of body
 const historicAnomaliesBox = document.getElementById("historic-anomalies");
 historicAnomaliesBox.appendChild(simulateButton);
-// ---- UPDATED SIMULATE BUTTON CODE END ----
 });
 
 const markers = {};
@@ -295,10 +291,10 @@ document.getElementById("search-input").addEventListener("keypress", (e) => {
 
 function simulateAnomaly() {
   const fakeShip = {
-    shipName: "homnk",
+    shipName: "Unknown",
     shipId: "999999999",
     latitude: 64.5,
-    longitude: 10.0,
+    longitude: 15.0,
     speed: 500,
     course: 45,
     speed_diff: 200,
